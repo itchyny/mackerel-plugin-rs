@@ -44,6 +44,17 @@ pub struct Metric {
     diff: bool,
 }
 
+impl Metric {
+    pub fn new(name: String, label: String) -> Metric {
+        Metric {
+            name: name,
+            label: label,
+            stacked: false,
+            diff: false,
+        }
+    }
+}
+
 /// A Graph
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct Graph {
@@ -53,7 +64,13 @@ pub struct Graph {
     metrics: Vec<Metric>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl Graph {
+    pub fn new(name: String, label: String, unit: Unit, metrics: Vec<Metric>) -> Graph {
+        Graph {
+            name: name,
+            label: label,
+            unit: unit,
+            metrics: metrics,
+        }
+    }
 }
