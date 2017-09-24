@@ -34,6 +34,16 @@ impl fmt::Display for Unit {
     }
 }
 
+/// A Metric
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct Metric {
+    name: String,
+    label: String,
+    stacked: bool,
+    #[serde(skip_serializing)]
+    diff: bool,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
