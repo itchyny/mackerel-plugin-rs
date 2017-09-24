@@ -1,6 +1,5 @@
 use std::fmt;
 
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 
@@ -51,6 +50,20 @@ impl Metric {
             label: label,
             stacked: false,
             diff: false,
+        }
+    }
+
+    pub fn stacked(&self) -> Metric {
+        Metric {
+            stacked: true,
+            ..self.clone()
+        }
+    }
+
+    pub fn diff(&self) -> Metric {
+        Metric {
+            diff: true,
+            ..self.clone()
         }
     }
 }
