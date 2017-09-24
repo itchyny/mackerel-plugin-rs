@@ -44,6 +44,15 @@ pub struct Metric {
     diff: bool,
 }
 
+/// A Graph
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct Graph {
+    name: String,
+    label: String,
+    unit: Unit,
+    metrics: Vec<Metric>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
