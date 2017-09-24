@@ -58,6 +58,7 @@ impl Metric {
 /// A Graph
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct Graph {
+    #[serde(skip_serializing)]
     name: String,
     label: String,
     unit: Unit,
