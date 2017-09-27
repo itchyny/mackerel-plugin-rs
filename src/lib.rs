@@ -1,7 +1,12 @@
+use std::collections::HashMap;
+use std::env;
 use std::fmt;
+use std::io;
 
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_json;
+extern crate time;
 
 /// Metric units
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
@@ -85,6 +90,58 @@ impl Graph {
             label: label,
             unit: unit,
             metrics: metrics,
+        }
+    }
+}
+
+/// A Plugin
+pub trait Plugin {
+    fn fetch_metrics(&self) -> HashMap<String, f64>;
+
+    fn graph_definition(&self) -> Vec<Graph>;
+
+    fn print_value(&self, out: &mut io::Write, metric_name: String, value: f64, now: time::Timespec) {
+        if !value.is_nan() && value.is_finite() {
+            let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now.sec);
+        }
+    }
+
+    fn output_values(&self, out: &mut io::Write) {
+        let now = time::now().to_timespec();
+        let results = self.fetch_metrics();
+        for graph in self.graph_definition() {
+            for metric in graph.metrics {
+                self.format_values(out, &graph.name, metric, &results, now);
+            }
+        }
+    }
+
+    fn format_values(&self, out: &mut io::Write, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: time::Timespec) {
+        let metric_name = format!("{}.{}", graph_name, &metric.name);
+        results.get(&metric_name).map(|value| self.print_value(out, metric_name, *value, now));
+    }
+
+    fn output_definitions(&self, out: &mut io::Write) {
+        let _ = writeln!(out, "# mackerel-agent-plugins");
+        let _ = writeln!(out, "{:?}", serde_json::to_value(self.graph_definition()));
+    }
+
+    fn env_plugin_meta(&self) -> Option<String> {
+        env::vars()
+            .filter_map(|(key, value)| if key == "MACKEREL_AGENT_PLUGIN_META" {
+                Some(value)
+            } else {
+                None
+            })
+            .next()
+    }
+
+    fn run(&self) {
+        let mut stdout = io::stdout();
+        if self.env_plugin_meta().map_or(false, |value| value != "") {
+            self.output_definitions(&mut stdout)
+        } else {
+            self.output_values(&mut stdout)
         }
     }
 }
