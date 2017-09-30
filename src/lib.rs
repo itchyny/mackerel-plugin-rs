@@ -93,19 +93,19 @@ impl Metric {
 #[macro_export]
 macro_rules! metric {
     (name: $name:expr, label: $label:expr) => {
-        Metric::new($name.into(), $label.into(), false, false)
+        $crate::Metric::new($name.into(), $label.into(), false, false)
     };
 
     (name: $name:expr, label: $label:expr, stacked: $stacked:expr) => {
-        Metric::new($name.into(), $label.into(), $stacked, false)
+        $crate::Metric::new($name.into(), $label.into(), $stacked, false)
     };
 
     (name: $name:expr, label: $label:expr, diff: $diff:expr) => {
-        Metric::new($name.into(), $label.into(), false, $diff)
+        $crate::Metric::new($name.into(), $label.into(), false, $diff)
     };
 
     (name: $name:expr, label: $label:expr, stacked: $stacked:expr, diff: $diff:expr) => {
-        Metric::new($name.into(), $label.into(), $stacked, $diff)
+        $crate::Metric::new($name.into(), $label.into(), $stacked, $diff)
     };
 
     ($($token:tt)*) => {
@@ -150,7 +150,7 @@ impl Graph {
 #[macro_export]
 macro_rules! graph {
     (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: [$($metrics:tt)+]) => {
-        Graph::new($name.into(), $label.into(), $unit.into(), metrics!($($metrics)+))
+        $crate::Graph::new($name.into(), $label.into(), $unit.into(), metrics!($($metrics)+))
     };
 
     ($($token:tt)*) => {

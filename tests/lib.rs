@@ -6,7 +6,7 @@ extern crate time;
 
 use std::collections::HashMap;
 use std::io::Cursor;
-use mackerel_plugin::*;
+use mackerel_plugin::{Graph, Plugin};
 
 #[test]
 fn serialize_graph() {
