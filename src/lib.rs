@@ -79,17 +79,7 @@ macro_rules! name_validation {
 }
 
 impl Metric {
-    pub fn new(name: String, label: String) -> Metric {
-        name_validation!("metric", name);
-        Metric {
-            name: name,
-            label: label,
-            stacked: false,
-            diff: false,
-        }
-    }
-
-    pub fn new_with_stacked_and_diff(name: String, label: String, stacked: bool, diff: bool) -> Metric {
+    pub fn new(name: String, label: String, stacked: bool, diff: bool) -> Metric {
         name_validation!("metric", name);
         Metric {
             name: name,
@@ -103,19 +93,19 @@ impl Metric {
 #[macro_export]
 macro_rules! metric {
     (name: $name:expr, label: $label:expr) => {
-        Metric::new($name.into(), $label.into())
+        Metric::new($name.into(), $label.into(), false, false)
     };
 
     (name: $name:expr, label: $label:expr, stacked: $stacked:expr) => {
-        Metric::new_with_stacked_and_diff($name.into(), $label.into(), $stacked, false)
+        Metric::new($name.into(), $label.into(), $stacked, false)
     };
 
     (name: $name:expr, label: $label:expr, diff: $diff:expr) => {
-        Metric::new_with_stacked_and_diff($name.into(), $label.into(), false, $diff)
+        Metric::new($name.into(), $label.into(), false, $diff)
     };
 
     (name: $name:expr, label: $label:expr, stacked: $stacked:expr, diff: $diff:expr) => {
-        Metric::new_with_stacked_and_diff($name.into(), $label.into(), $stacked, $diff)
+        Metric::new($name.into(), $label.into(), $stacked, $diff)
     };
 
     ($($token:tt)*) => {
