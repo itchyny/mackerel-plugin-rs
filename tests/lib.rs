@@ -1,6 +1,6 @@
-extern crate serde_json;
-
 extern crate mackerel_plugin;
+extern crate serde_json;
+extern crate time;
 
 use std::collections::HashMap;
 use std::io::Cursor;
@@ -57,4 +57,23 @@ impl Plugin for DicePlugin {
             ),
         ]
     }
+}
+
+fn current_epoch() -> i64 {
+    if time::now().tm_nsec > 900_000_000 {
+        std::thread::sleep(std::time::Duration::from_millis(100))
+    }
+    time::now().to_timespec().sec
+}
+
+#[test]
+fn plugin_output_values() {
+    let plugin = DicePlugin {};
+    let mut out = Cursor::new(Vec::new());
+    let now = current_epoch();
+    plugin.output_values(&mut out);
+    assert_eq!(
+        String::from_utf8(out.into_inner()).unwrap(),
+        format!("{}\t{}\t{}\n{}\t{}\t{}\n", "dice.d6", 3.0, now, "dice.d20", 17.0, now)
+    );
 }
