@@ -21,18 +21,16 @@ fn serialize_graph() {
             metric! { name: "qux", label: "Qux metric", stacked: true, diff: true },
         ],
     );
-    let json: serde_json::Value = serde_json::from_str(
-        r##"{
-              "label": "Foo bar",
-              "metrics": [
-                { "name": "foo", "label": "Foo metric", "stacked": false },
-                { "name": "bar", "label": "Bar metric", "stacked": true },
-                { "name": "baz", "label": "Baz metric", "stacked": false },
-                { "name": "qux", "label": "Qux metric", "stacked": true }
-              ],
-              "unit": "integer"
-            }"##,
-    ).unwrap();
+    let json = json!({
+        "label": "Foo bar",
+        "metrics": [
+            { "name": "foo", "label": "Foo metric", "stacked": false },
+            { "name": "bar", "label": "Bar metric", "stacked": true },
+            { "name": "baz", "label": "Baz metric", "stacked": false },
+            { "name": "qux", "label": "Qux metric", "stacked": true }
+        ],
+        "unit": "integer"
+    });
     assert_eq!(serde_json::to_value(graph).unwrap(), json);
 }
 
