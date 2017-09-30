@@ -1,4 +1,5 @@
 extern crate mackerel_plugin;
+#[macro_use]
 extern crate serde_json;
 extern crate time;
 
@@ -75,5 +76,29 @@ fn plugin_output_values() {
     assert_eq!(
         String::from_utf8(out.into_inner()).unwrap(),
         format!("{}\t{}\t{}\n{}\t{}\t{}\n", "dice.d6", 3.0, now, "dice.d20", 17.0, now)
+    );
+}
+
+#[test]
+fn plugin_output_definitions() {
+    let plugin = DicePlugin {};
+    let mut out = Cursor::new(Vec::new());
+    plugin.output_definitions(&mut out);
+    let out_str = String::from_utf8(out.into_inner()).unwrap();
+    assert_eq!(out_str.starts_with("# mackerel-agent-plugins\n"), true);
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(out_str.chars().skip(25).collect::<String>().as_ref()).unwrap(),
+        json!({
+            "graphs": {
+                "dice": {
+                    "label": "My Dice",
+                    "metrics": [
+                        { "name": "d6", "label": "Die 6", "stacked": false },
+                        { "name": "d20", "label": "Die 20", "stacked": false }
+                    ],
+                    "unit": "integer"
+                }
+            }
+        })
     );
 }
