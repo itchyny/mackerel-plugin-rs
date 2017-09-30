@@ -74,6 +74,25 @@ impl Metric {
     }
 }
 
+#[macro_export]
+macro_rules! metric {
+    (name: $name:expr, label: $label:expr) => {
+        Metric::new($name.into(), $label.into())
+    };
+
+    (name: $name:expr, label: $label:expr, stacked: $stacked:expr) => {
+        Metric::new($name.into(), $label.into()).stacked()
+    };
+
+    (name: $name:expr, label: $label:expr, diff: $diff:expr) => {
+        Metric::new($name.into(), $label.into()).diff()
+    };
+
+    (name: $name:expr, label: $label:expr, stacked: $stacked:expr, diff: $diff:expr) => {
+        Metric::new($name.into(), $label.into()).stacked().diff()
+    };
+}
+
 /// A Graph
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct Graph {

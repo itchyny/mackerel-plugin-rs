@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate mackerel_plugin;
 #[macro_use]
 extern crate serde_json;
@@ -14,10 +15,10 @@ fn serialize_graph() {
         "Foo bar".to_string(),
         Unit::Integer,
         vec![
-            Metric::new("foo".to_string(), "Foo metric".to_string()),
-            Metric::new("bar".to_string(), "Bar metric".to_string()).stacked(),
-            Metric::new("baz".to_string(), "Baz metric".to_string()).diff(),
-            Metric::new("qux".to_string(), "Qux metric".to_string()).diff().stacked(),
+            metric! { name: "foo", label: "Foo metric" },
+            metric! { name: "bar", label: "Bar metric", stacked: true },
+            metric! { name: "baz", label: "Baz metric", diff: true },
+            metric! { name: "qux", label: "Qux metric", stacked: true, diff: true },
         ],
     );
     let json: serde_json::Value = serde_json::from_str(
@@ -52,8 +53,8 @@ impl Plugin for DicePlugin {
                 "My Dice".to_string(),
                 Unit::Integer,
                 vec![
-                    Metric::new("d6".to_string(), "Die 6".to_string()),
-                    Metric::new("d20".to_string(), "Die 20".to_string()),
+                    metric! { name: "d6", label: "Die 6" },
+                    metric! { name: "d20", label: "Die 20" },
                 ],
             ),
         ]
