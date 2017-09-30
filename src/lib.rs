@@ -50,7 +50,7 @@ impl<'a> From<&'a str> for Unit {
             "bytes/sec" => Unit::BytesPerSecond,
             "iops" => Unit::IOPS,
             x => panic!(
-                "Invalid unit: {} (should be one of float, integer, percentage, bytes, bytes/sec or iops)",
+                "invalid unit: {} (should be one of float, integer, percentage, bytes, bytes/sec or iops)",
                 x
             ),
         }
@@ -67,8 +67,20 @@ pub struct Metric {
     diff: bool,
 }
 
+// Compile time validation?
+macro_rules! name_validation {
+    ($type:expr, $name:expr) => {
+        if !$name.chars().all(|c| {
+            'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || '0' <= c && c <= '9' || c == '-' || c == '_' || c == '.'
+        }) {
+            panic!("invalid {} name: {}", $type, $name);
+        }
+    }
+}
+
 impl Metric {
     pub fn new(name: String, label: String) -> Metric {
+        name_validation!("metric", name);
         Metric {
             name: name,
             label: label,
@@ -78,6 +90,7 @@ impl Metric {
     }
 
     pub fn new_with_stacked_and_diff(name: String, label: String, stacked: bool, diff: bool) -> Metric {
+        name_validation!("metric", name);
         Metric {
             name: name,
             label: label,
@@ -118,6 +131,7 @@ pub struct Graph {
 
 impl Graph {
     pub fn new(name: String, label: String, unit: Unit, metrics: Vec<Metric>) -> Graph {
+        name_validation!("graph", name);
         Graph {
             name: name,
             label: label,
