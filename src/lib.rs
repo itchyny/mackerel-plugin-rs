@@ -164,12 +164,14 @@ pub trait Plugin {
 
     fn graph_definition(&self) -> Vec<Graph>;
 
+    #[doc(hidden)]
     fn print_value(&self, out: &mut io::Write, metric_name: String, value: f64, now: time::Timespec) {
         if !value.is_nan() && value.is_finite() {
             let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now.sec);
         }
     }
 
+    #[doc(hidden)]
     fn output_values(&self, out: &mut io::Write) -> Result<(), String> {
         let now = time::now().to_timespec();
         let results = self.fetch_metrics()?;
@@ -181,11 +183,13 @@ pub trait Plugin {
         Ok(())
     }
 
+    #[doc(hidden)]
     fn format_values(&self, out: &mut io::Write, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: time::Timespec) {
         let metric_name = format!("{}.{}", graph_name, &metric.name);
         results.get(&metric_name).map(|value| self.print_value(out, metric_name, *value, now));
     }
 
+    #[doc(hidden)]
     fn output_definitions(&self, out: &mut io::Write) -> Result<(), String> {
         writeln!(out, "# mackerel-agent-plugins").map_err(|e| format!("{}", e))?;
         let json = json!({"graphs": self.graph_definition().iter().map(|graph| (&graph.name, graph)).collect::<HashMap<_, _>>()});
@@ -193,6 +197,7 @@ pub trait Plugin {
         Ok(())
     }
 
+    #[doc(hidden)]
     fn env_plugin_meta(&self) -> Option<String> {
         env::vars()
             .filter_map(|(key, value)| if key == "MACKEREL_AGENT_PLUGIN_META" {
