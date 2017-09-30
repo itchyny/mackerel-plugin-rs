@@ -50,7 +50,7 @@ impl Plugin for DicePlugin {
                 name: "dice",
                 label: "My Dice",
                 unit: "integer",
-                metrics: vec![
+                metrics: [
                     metric! { name: "d6", label: "Die 6" },
                     metric! { name: "d20", label: "Die 20" },
                 ]

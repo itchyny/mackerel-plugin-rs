@@ -130,7 +130,7 @@ impl Graph {
 #[macro_export]
 macro_rules! graph {
     (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: $metrics:expr) => {
-        Graph::new($name.into(), $label.into(), $unit.into(), $metrics.into())
+        Graph::new($name.into(), $label.into(), $unit.into(), $metrics.to_vec())
     };
 }
 
