@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fmt;
 use std::io;
+use std::convert::From;
 
 #[macro_use]
 extern crate serde_derive;
@@ -35,6 +36,23 @@ impl fmt::Display for Unit {
             Unit::Bytes => write!(f, "bytes"),
             Unit::BytesPerSecond => write!(f, "bytes/sec"),
             Unit::IOPS => write!(f, "iops"),
+        }
+    }
+}
+
+impl<'a> From<&'a str> for Unit {
+    fn from(src: &str) -> Unit {
+        match src {
+            "float" => Unit::Float,
+            "integer" => Unit::Integer,
+            "percentage" => Unit::Percentage,
+            "bytes" => Unit::Bytes,
+            "bytes/sec" => Unit::BytesPerSecond,
+            "iops" => Unit::IOPS,
+            x => panic!(
+                "Invalid unit: {} (should be one of float, integer, percentage, bytes, bytes/sec or iops)",
+                x
+            ),
         }
     }
 }
