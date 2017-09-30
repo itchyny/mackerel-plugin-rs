@@ -10,17 +10,17 @@ use mackerel_plugin::*;
 
 #[test]
 fn serialize_graph() {
-    let graph = Graph::new(
-        "foo.bar".to_string(),
-        "Foo bar".to_string(),
-        Unit::Integer,
-        vec![
+    let graph = graph! {
+        name: "foo.bar",
+        label: "Foo bar",
+        unit: "bytes/sec",
+        metrics: vec![
             metric! { name: "foo", label: "Foo metric" },
             metric! { name: "bar", label: "Bar metric", stacked: true },
             metric! { name: "baz", label: "Baz metric", diff: true },
             metric! { name: "qux", label: "Qux metric", stacked: true, diff: true },
-        ],
-    );
+        ]
+    };
     let json = json!({
         "label": "Foo bar",
         "metrics": [
@@ -29,7 +29,7 @@ fn serialize_graph() {
             { "name": "baz", "label": "Baz metric", "stacked": false },
             { "name": "qux", "label": "Qux metric", "stacked": true }
         ],
-        "unit": "integer"
+        "unit": "bytes/sec"
     });
     assert_eq!(serde_json::to_value(graph).unwrap(), json);
 }
@@ -46,15 +46,15 @@ impl Plugin for DicePlugin {
 
     fn graph_definition(&self) -> Vec<Graph> {
         vec![
-            Graph::new(
-                "dice".to_string(),
-                "My Dice".to_string(),
-                Unit::Integer,
-                vec![
+            graph! {
+                name: "dice",
+                label: "My Dice",
+                unit: "integer",
+                metrics: vec![
                     metric! { name: "d6", label: "Die 6" },
                     metric! { name: "d20", label: "Die 20" },
-                ],
-            ),
+                ]
+            },
         ]
     }
 }
