@@ -90,6 +90,35 @@ impl Metric {
     }
 }
 
+/// Construct a Metric.
+///
+/// ```rust
+/// # #[macro_use]
+/// # extern crate mackerel_plugin;
+/// #
+/// # fn main() {
+/// let metric = metric! {
+///     name: "foo",
+///     label: "Foo metric"
+/// };
+/// # }
+/// ```
+///
+/// Additionally you can specify `stacked` and `diff` options.
+///
+/// ```rust
+/// # #[macro_use]
+/// # extern crate mackerel_plugin;
+/// #
+/// # fn main() {
+/// let metric = metric! {
+///     name: "foo",
+///     label: "Foo metric",
+///     stacked: true,
+///     diff: true
+/// };
+/// # }
+/// ```
 #[macro_export]
 macro_rules! metric {
     (name: $name:expr, label: $label:expr) => {
@@ -147,6 +176,24 @@ impl Graph {
     }
 }
 
+/// Construct a Graph.
+///
+/// ```rust
+/// # #[macro_use]
+/// # extern crate mackerel_plugin;
+/// #
+/// # fn main() {
+/// let graph = graph! {
+///     name: "linux.swap",
+///     label: "Linux Swap Usage",
+///     unit: "integer",
+///     metrics: [
+///         { name: "pswpin", label: "Swap In", diff: true },
+///         { name: "pswpout", label: "Swap Out", diff: true },
+///     ]
+/// };
+/// # }
+/// ```
 #[macro_export]
 macro_rules! graph {
     (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: [$($metrics:tt)+]) => {
@@ -158,7 +205,9 @@ macro_rules! graph {
     };
 }
 
-/// A Plugin
+/// A trait which represents a Plugin.
+///
+/// You can create a plugin by implementing `fetch_metrics` and `graph_definition`.
 pub trait Plugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String>;
 
