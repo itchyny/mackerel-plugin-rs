@@ -84,9 +84,9 @@ fn plugin_output_definitions() {
     let mut out = Cursor::new(Vec::new());
     assert_eq!(plugin.output_definitions(&mut out).is_ok(), true);
     let out_str = String::from_utf8(out.into_inner()).unwrap();
-    assert_eq!(out_str.starts_with("# mackerel-agent-plugins\n"), true);
+    assert_eq!(out_str.starts_with("# mackerel-agent-plugin\n"), true);
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(out_str.chars().skip(25).collect::<String>().as_ref()).unwrap(),
+        serde_json::from_str::<serde_json::Value>(out_str.chars().skip(24).collect::<String>().as_ref()).unwrap(),
         json!({
             "graphs": {
                 "dice": {

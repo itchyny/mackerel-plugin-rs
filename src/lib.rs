@@ -240,7 +240,7 @@ pub trait Plugin {
 
     #[doc(hidden)]
     fn output_definitions(&self, out: &mut io::Write) -> Result<(), String> {
-        writeln!(out, "# mackerel-agent-plugins").map_err(|e| format!("{}", e))?;
+        writeln!(out, "# mackerel-agent-plugin").map_err(|e| format!("{}", e))?;
         let json = json!({"graphs": self.graph_definition().iter().map(|graph| (&graph.name, graph)).collect::<HashMap<_, _>>()});
         writeln!(out, "{}", json.to_string()).map_err(|e| format!("{}", e))?;
         Ok(())
