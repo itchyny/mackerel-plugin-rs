@@ -14,11 +14,11 @@ fn serialize_graph() {
         name: "foo.bar",
         label: "Foo bar",
         unit: "bytes/sec",
-        metrics: vec![
-            metric! { name: "foo", label: "Foo metric" },
-            metric! { name: "bar", label: "Bar metric", stacked: true },
-            metric! { name: "baz", label: "Baz metric", diff: true },
-            metric! { name: "qux", label: "Qux metric", stacked: true, diff: true },
+        metrics: [
+            { name: "foo", label: "Foo metric" },
+            { name: "bar", label: "Bar metric", stacked: true },
+            { name: "baz", label: "Baz metric", diff: true },
+            { name: "qux", label: "Qux metric", stacked: true, diff: true },
         ]
     };
     let json = json!({
@@ -51,8 +51,8 @@ impl Plugin for DicePlugin {
                 label: "My Dice",
                 unit: "integer",
                 metrics: [
-                    metric! { name: "d6", label: "Die 6" },
-                    metric! { name: "d20", label: "Die 20" },
+                    { name: "d6", label: "Die 6" },
+                    { name: "d20", label: "Die 20" }
                 ]
             },
         ]

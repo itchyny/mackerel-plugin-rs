@@ -119,6 +119,18 @@ macro_rules! metric {
     };
 }
 
+#[macro_export]
+#[doc(hidden)]
+macro_rules! metrics {
+    ($({$($token:tt)+},)*) => {
+        vec![$(metric! {$($token)+},)*]
+    };
+
+    ($({$($token:tt)+}),*) => {
+        vec![$(metric! {$($token)+}),*]
+    };
+}
+
 /// A Graph
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct Graph {
@@ -143,8 +155,8 @@ impl Graph {
 
 #[macro_export]
 macro_rules! graph {
-    (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: $metrics:expr) => {
-        Graph::new($name.into(), $label.into(), $unit.into(), $metrics.to_vec())
+    (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: [$($metrics:tt)+]) => {
+        Graph::new($name.into(), $label.into(), $unit.into(), metrics!($($metrics)+))
     };
 }
 
