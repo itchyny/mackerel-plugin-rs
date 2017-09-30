@@ -38,11 +38,11 @@ fn serialize_graph() {
 struct DicePlugin {}
 
 impl Plugin for DicePlugin {
-    fn fetch_metrics(&self) -> HashMap<String, f64> {
+    fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
         let mut metrics = HashMap::new();
         metrics.insert("dice.d6".to_string(), 3.0);
         metrics.insert("dice.d20".to_string(), 17.0);
-        metrics
+        Ok(metrics)
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
@@ -72,7 +72,7 @@ fn plugin_output_values() {
     let plugin = DicePlugin {};
     let mut out = Cursor::new(Vec::new());
     let now = current_epoch();
-    plugin.output_values(&mut out);
+    assert_eq!(plugin.output_values(&mut out).is_ok(), true);
     assert_eq!(
         String::from_utf8(out.into_inner()).unwrap(),
         format!("{}\t{}\t{}\n{}\t{}\t{}\n", "dice.d6", 3.0, now, "dice.d20", 17.0, now)
@@ -83,7 +83,7 @@ fn plugin_output_values() {
 fn plugin_output_definitions() {
     let plugin = DicePlugin {};
     let mut out = Cursor::new(Vec::new());
-    plugin.output_definitions(&mut out);
+    assert_eq!(plugin.output_definitions(&mut out).is_ok(), true);
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(out_str.starts_with("# mackerel-agent-plugins\n"), true);
     assert_eq!(

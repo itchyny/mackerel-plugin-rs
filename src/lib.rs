@@ -97,7 +97,7 @@ impl Graph {
 
 /// A Plugin
 pub trait Plugin {
-    fn fetch_metrics(&self) -> HashMap<String, f64>;
+    fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String>;
 
     fn graph_definition(&self) -> Vec<Graph>;
 
@@ -107,14 +107,15 @@ pub trait Plugin {
         }
     }
 
-    fn output_values(&self, out: &mut io::Write) {
+    fn output_values(&self, out: &mut io::Write) -> Result<(), String> {
         let now = time::now().to_timespec();
-        let results = self.fetch_metrics();
+        let results = self.fetch_metrics()?;
         for graph in self.graph_definition() {
             for metric in graph.metrics {
                 self.format_values(out, &graph.name, metric, &results, now);
             }
         }
+        Ok(())
     }
 
     fn format_values(&self, out: &mut io::Write, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: time::Timespec) {
@@ -122,10 +123,11 @@ pub trait Plugin {
         results.get(&metric_name).map(|value| self.print_value(out, metric_name, *value, now));
     }
 
-    fn output_definitions(&self, out: &mut io::Write) {
-        let _ = writeln!(out, "# mackerel-agent-plugins");
+    fn output_definitions(&self, out: &mut io::Write) -> Result<(), String> {
+        writeln!(out, "# mackerel-agent-plugins").map_err(|e| format!("{}", e))?;
         let json = json!({"graphs": self.graph_definition().iter().map(|graph| (&graph.name, graph)).collect::<HashMap<_, _>>()});
-        let _ = writeln!(out, "{}", json.to_string());
+        writeln!(out, "{}", json.to_string()).map_err(|e| format!("{}", e))?;
+        Ok(())
     }
 
     fn env_plugin_meta(&self) -> Option<String> {
@@ -138,7 +140,7 @@ pub trait Plugin {
             .next()
     }
 
-    fn run(&self) {
+    fn run(&self) -> Result<(), String> {
         let mut stdout = io::stdout();
         if self.env_plugin_meta().map_or(false, |value| value != "") {
             self.output_definitions(&mut stdout)
