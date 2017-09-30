@@ -5,6 +5,7 @@ use std::io;
 
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
 extern crate time;
 
@@ -123,7 +124,8 @@ pub trait Plugin {
 
     fn output_definitions(&self, out: &mut io::Write) {
         let _ = writeln!(out, "# mackerel-agent-plugins");
-        let _ = writeln!(out, "{:?}", serde_json::to_value(self.graph_definition()));
+        let json = json!({"graphs": self.graph_definition().iter().map(|graph| (&graph.name, graph)).collect::<HashMap<_, _>>()});
+        let _ = writeln!(out, "{}", json.to_string());
     }
 
     fn env_plugin_meta(&self) -> Option<String> {
