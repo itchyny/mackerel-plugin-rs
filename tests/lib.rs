@@ -33,3 +33,28 @@ fn serialize_graph() {
     ).unwrap();
     assert_eq!(serde_json::to_value(graph).unwrap(), json);
 }
+
+struct DicePlugin {}
+
+impl Plugin for DicePlugin {
+    fn fetch_metrics(&self) -> HashMap<String, f64> {
+        let mut metrics = HashMap::new();
+        metrics.insert("dice.d6".to_string(), 3.0);
+        metrics.insert("dice.d20".to_string(), 17.0);
+        metrics
+    }
+
+    fn graph_definition(&self) -> Vec<Graph> {
+        vec![
+            Graph::new(
+                "dice".to_string(),
+                "My Dice".to_string(),
+                Unit::Integer,
+                vec![
+                    Metric::new("d6".to_string(), "Die 6".to_string()),
+                    Metric::new("d20".to_string(), "Die 20".to_string()),
+                ],
+            ),
+        ]
+    }
+}
