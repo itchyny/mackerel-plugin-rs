@@ -117,6 +117,10 @@ macro_rules! metric {
     (name: $name:expr, label: $label:expr, stacked: $stacked:expr, diff: $diff:expr) => {
         Metric::new_with_stacked_and_diff($name.into(), $label.into(), $stacked, $diff)
     };
+
+    ($($token:tt)*) => {
+        compile_error!("name and label are required for a metric");
+    };
 }
 
 #[macro_export]
@@ -157,6 +161,10 @@ impl Graph {
 macro_rules! graph {
     (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: [$($metrics:tt)+]) => {
         Graph::new($name.into(), $label.into(), $unit.into(), metrics!($($metrics)+))
+    };
+
+    ($($token:tt)*) => {
+        compile_error!("name, label, unit and metrics are required for a graph");
     };
 }
 
