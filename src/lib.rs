@@ -59,17 +59,12 @@ impl Metric {
         }
     }
 
-    pub fn stacked(&self) -> Metric {
+    pub fn new_with_stacked_and_diff(name: String, label: String, stacked: bool, diff: bool) -> Metric {
         Metric {
-            stacked: true,
-            ..self.clone()
-        }
-    }
-
-    pub fn diff(&self) -> Metric {
-        Metric {
-            diff: true,
-            ..self.clone()
+            name: name,
+            label: label,
+            stacked: stacked,
+            diff: diff,
         }
     }
 }
@@ -81,15 +76,15 @@ macro_rules! metric {
     };
 
     (name: $name:expr, label: $label:expr, stacked: $stacked:expr) => {
-        Metric::new($name.into(), $label.into()).stacked()
+        Metric::new_with_stacked_and_diff($name.into(), $label.into(), $stacked, false)
     };
 
     (name: $name:expr, label: $label:expr, diff: $diff:expr) => {
-        Metric::new($name.into(), $label.into()).diff()
+        Metric::new_with_stacked_and_diff($name.into(), $label.into(), false, $diff)
     };
 
     (name: $name:expr, label: $label:expr, stacked: $stacked:expr, diff: $diff:expr) => {
-        Metric::new($name.into(), $label.into()).stacked().diff()
+        Metric::new_with_stacked_and_diff($name.into(), $label.into(), $stacked, $diff)
     };
 }
 
