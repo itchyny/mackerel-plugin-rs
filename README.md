@@ -3,6 +3,12 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![crates.io](https://img.shields.io/crates/v/mackerel_plugin.svg)](https://crates.io/crates/mackerel_plugin)
 
+## Plugins
+Plugins using this library.
+
+- [mackerel-plugin-loadavg](https://github.com/itchyny/mackerel-plugin-loadavg)
+- [mackerel-plugin-dice](https://github.com/itchyny/mackerel-plugin-dice)
+
 ## Example
 ```rust
 #[macro_use]
