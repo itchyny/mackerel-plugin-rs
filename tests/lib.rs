@@ -101,3 +101,99 @@ fn plugin_output_definitions() {
         })
     );
 }
+
+struct InodePlugin {}
+
+impl Plugin for InodePlugin {
+    fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
+        let mut metrics = HashMap::new();
+        metrics.insert("inode.count.sda1.used".to_string(), 1212333.0);
+        metrics.insert("inode.count.sda1.total".to_string(), 2515214.0);
+        metrics.insert("inode.count.sda2.used".to_string(), 1212334.0);
+        metrics.insert("inode.count.sda2.total".to_string(), 2515215.0);
+        metrics.insert("inode.percentage.sda1.used".to_string(), 48.2);
+        metrics.insert("inode.percentage.sda-2_1Z.used".to_string(), 63.7);
+        metrics.insert("inode.percentage.sda3.used.etc".to_string(), 72.1);
+        metrics.insert("inode.percentage..used".to_string(), 36.2);
+        Ok(metrics)
+    }
+
+    fn graph_definition(&self) -> Vec<Graph> {
+        vec![
+            graph! {
+                name: "inode.percentage.#",
+                label: "Inode percentage",
+                unit: "percentage",
+                metrics: [
+                    { name: "used", label: "used %" },
+                ]
+            },
+            graph! {
+                name: "inode.count.sda1",
+                label: "sda1",
+                unit: "integer",
+                metrics: [
+                    { name: "*", label: "%1" },
+                ]
+            },
+        ]
+    }
+}
+
+#[test]
+fn wildcard_plugin_output_values() {
+    let plugin = InodePlugin {};
+    let mut out = Cursor::new(Vec::new());
+    let now = current_epoch();
+    assert_eq!(plugin.output_values(&mut out).is_ok(), true);
+    let out_str = String::from_utf8(out.into_inner()).unwrap();
+    assert_eq!(
+        out_str.contains(&format!("{}\t{}\t{}\n", "inode.percentage.sda1.used", 48.2, now)),
+        true
+    );
+    assert_eq!(
+        out_str.contains(&format!("{}\t{}\t{}\n", "inode.percentage.sda-2_1Z.used", 63.7, now)),
+        true
+    );
+    assert_eq!(out_str.contains("inode.percentage.sda3.used.etc"), false);
+    assert_eq!(out_str.contains("inode.percentage..used"), false);
+    assert_eq!(
+        out_str.contains(&format!("{}\t{}\t{}\n", "inode.count.sda1.used", 1212333.0, now)),
+        true
+    );
+    assert_eq!(
+        out_str.contains(&format!("{}\t{}\t{}\n", "inode.count.sda1.total", 2515214.0, now)),
+        true
+    );
+    assert_eq!(out_str.contains("inode.count.sda2.used"), false);
+}
+
+#[test]
+fn wildcard_plugin_output_definitions() {
+    let plugin = InodePlugin {};
+    let mut out = Cursor::new(Vec::new());
+    assert_eq!(plugin.output_definitions(&mut out).is_ok(), true);
+    let out_str = String::from_utf8(out.into_inner()).unwrap();
+    assert_eq!(out_str.starts_with("# mackerel-agent-plugin\n"), true);
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(out_str.chars().skip(24).collect::<String>().as_ref()).unwrap(),
+        json!({
+            "graphs": {
+                "inode.percentage.#": {
+                    "label": "Inode percentage",
+                    "metrics": [
+                        { "name": "used", "label": "used %", "stacked": false },
+                    ],
+                    "unit": "percentage"
+                },
+                "inode.count.sda1": {
+                    "label": "sda1",
+                    "metrics": [
+                        { "name": "*", "label": "%1", "stacked": false },
+                    ],
+                    "unit": "integer"
+                }
+            }
+        })
+    );
+}
