@@ -75,7 +75,7 @@ macro_rules! valid_chars {
 
 impl Metric {
     pub fn new(name: String, label: String, stacked: bool, diff: bool) -> Metric {
-        if !(name.chars().all(|c| valid_chars!(c)) || name == "*" || name == "#") {
+        if name.len() == 0 || !(name.chars().all(|c| valid_chars!(c)) || name == "*" || name == "#") || name.starts_with(".") || name.ends_with(".") {
             panic!("invalid metric name: {}", name);
         }
         Metric {
@@ -163,7 +163,9 @@ pub struct Graph {
 
 impl Graph {
     pub fn new(name: String, label: String, unit: Unit, metrics: Vec<Metric>) -> Graph {
-        if !name.chars().all(|c| valid_chars!(c) || c == '.' || c == '*' || c == '#') {
+        if name.len() == 0 || !name.chars().all(|c| valid_chars!(c) || c == '.' || c == '*' || c == '#') || name.starts_with(".")
+            || name.ends_with(".")
+        {
             panic!("invalid graph name: {}", name);
         }
         Graph {
