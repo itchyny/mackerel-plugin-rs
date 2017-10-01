@@ -67,20 +67,17 @@ pub struct Metric {
     diff: bool,
 }
 
-// Compile time validation?
-macro_rules! name_validation {
-    ($type:expr, $name:expr) => {
-        if !$name.chars().all(|c| {
-            'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || '0' <= c && c <= '9' || c == '-' || c == '_' || c == '.'
-        }) {
-            panic!("invalid {} name: {}", $type, $name);
-        }
+macro_rules! valid_chars {
+    ($c:expr) => {
+        'a' <= $c && $c <= 'z' || 'A' <= $c && $c <= 'Z' || '0' <= $c && $c <= '9' || $c == '-' || $c == '_'
     }
 }
 
 impl Metric {
     pub fn new(name: String, label: String, stacked: bool, diff: bool) -> Metric {
-        name_validation!("metric", name);
+        if !(name.chars().all(|c| valid_chars!(c)) || name == "*" || name == "#") {
+            panic!("invalid metric name: {}", name);
+        }
         Metric {
             name: name,
             label: label,
@@ -166,7 +163,9 @@ pub struct Graph {
 
 impl Graph {
     pub fn new(name: String, label: String, unit: Unit, metrics: Vec<Metric>) -> Graph {
-        name_validation!("graph", name);
+        if !name.chars().all(|c| valid_chars!(c) || c == '.' || c == '*' || c == '#') {
+            panic!("invalid graph name: {}", name);
+        }
         Graph {
             name: name,
             label: label,
