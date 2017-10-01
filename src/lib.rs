@@ -214,15 +214,15 @@ pub trait Plugin {
     fn graph_definition(&self) -> Vec<Graph>;
 
     #[doc(hidden)]
-    fn print_value(&self, out: &mut io::Write, metric_name: String, value: f64, now: time::Timespec) {
+    fn print_value(&self, out: &mut io::Write, metric_name: String, value: f64, now: i64) {
         if !value.is_nan() && value.is_finite() {
-            let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now.sec);
+            let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now);
         }
     }
 
     #[doc(hidden)]
     fn output_values(&self, out: &mut io::Write) -> Result<(), String> {
-        let now = time::now().to_timespec();
+        let now = time::now().to_timespec().sec;
         let results = self.fetch_metrics()?;
         for graph in self.graph_definition() {
             for metric in graph.metrics {
@@ -233,7 +233,7 @@ pub trait Plugin {
     }
 
     #[doc(hidden)]
-    fn format_values(&self, out: &mut io::Write, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: time::Timespec) {
+    fn format_values(&self, out: &mut io::Write, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
         let metric_name = format!("{}.{}", graph_name, &metric.name);
         results.get(&metric_name).map(|value| self.print_value(out, metric_name, *value, now));
     }
