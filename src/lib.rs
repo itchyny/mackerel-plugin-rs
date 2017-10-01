@@ -232,9 +232,32 @@ pub trait Plugin {
     }
 
     #[doc(hidden)]
-    fn format_values(&self, out: &mut io::Write, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
+    fn collect_metric_values(&self, graph_name: &str, metric: Metric, results: &HashMap<String, f64>) -> Vec<(String, f64)> {
         let metric_name = format!("{}.{}", graph_name, &metric.name);
-        results.get(&metric_name).map(|value| self.print_value(out, metric_name, *value, now));
+        let count = metric_name.chars().filter(|c| *c == '.').count();
+        if metric_name.contains("*") || metric_name.contains("#") {
+            results
+                .iter()
+                .filter(|&(name, _)| {
+                    name.chars().filter(|c| *c == '.').count() == count
+                        && metric_name.split('.').zip(name.split('.')).all(|(cs, ds)| if cs == "*" || cs == "#" {
+                            ds.len() > 0 && ds.chars().all(|c| valid_chars!(c))
+                        } else {
+                            cs == ds
+                        })
+                })
+                .map(|(metric_name, value)| (metric_name.clone(), *value))
+                .collect()
+        } else {
+            results.get(&metric_name).map(|value| (metric_name, *value)).into_iter().collect()
+        }
+    }
+
+    #[doc(hidden)]
+    fn format_values(&self, out: &mut io::Write, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
+        for (metric_name, value) in self.collect_metric_values(graph_name, metric, results) {
+            self.print_value(out, metric_name, value, now);
+        }
     }
 
     #[doc(hidden)]
