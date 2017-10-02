@@ -78,7 +78,7 @@ macro_rules! valid_chars {
 
 impl Metric {
     pub fn new(name: String, label: String, stacked: bool, diff: bool) -> Metric {
-        if name.len() == 0 || !(name.chars().all(|c| valid_chars!(c)) || name == "*" || name == "#") || name.starts_with(".") || name.ends_with(".") {
+        if name.is_empty() || !(name.chars().all(|c| valid_chars!(c)) || name == "*" || name == "#") || name.starts_with(".") || name.ends_with(".") {
             panic!("invalid metric name: {}", name);
         }
         Metric {
@@ -249,7 +249,7 @@ pub trait Plugin {
                 .filter(|&(name, _)| {
                     name.chars().filter(|c| *c == '.').count() == count
                         && metric_name.split('.').zip(name.split('.')).all(|(cs, ds)| if cs == "*" || cs == "#" {
-                            ds.len() > 0 && ds.chars().all(|c| valid_chars!(c))
+                            !ds.is_empty() && ds.chars().all(|c| valid_chars!(c))
                         } else {
                             cs == ds
                         })
