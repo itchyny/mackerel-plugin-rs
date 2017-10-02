@@ -220,13 +220,6 @@ pub trait Plugin {
     }
 
     #[doc(hidden)]
-    fn print_value(&self, out: &mut io::Write, metric_name: String, value: f64, now: i64) {
-        if !value.is_nan() && value.is_finite() {
-            let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now);
-        }
-    }
-
-    #[doc(hidden)]
     fn output_values(&self, out: &mut io::Write) -> Result<(), String> {
         let now = time::now().to_timespec().sec;
         let results = self.fetch_metrics()?;
@@ -237,6 +230,14 @@ pub trait Plugin {
             }
         }
         Ok(())
+    }
+
+    #[doc(hidden)]
+    fn format_values(&self, out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
+        for (metric_name, value) in self.collect_metric_values(graph_name, metric, results) {
+            let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
+            self.print_value(out, name, value, now);
+        }
     }
 
     #[doc(hidden)]
@@ -262,10 +263,9 @@ pub trait Plugin {
     }
 
     #[doc(hidden)]
-    fn format_values(&self, out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
-        for (metric_name, value) in self.collect_metric_values(graph_name, metric, results) {
-            let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
-            self.print_value(out, name, value, now);
+    fn print_value(&self, out: &mut io::Write, metric_name: String, value: f64, now: i64) {
+        if !value.is_nan() && value.is_finite() {
+            let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now);
         }
     }
 
