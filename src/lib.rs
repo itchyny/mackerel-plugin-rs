@@ -69,7 +69,10 @@ pub struct Metric {
 
 macro_rules! valid_chars {
     ($c:expr) => {
-        'a' <= $c && $c <= 'z' || 'A' <= $c && $c <= 'Z' || '0' <= $c && $c <= '9' || $c == '-' || $c == '_'
+        match $c {
+            'a'...'z' | 'A'...'Z' | '0'...'9' | '-' | '_' => true,
+            _ => false,
+        }
     }
 }
 
