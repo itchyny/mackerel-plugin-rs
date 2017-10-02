@@ -217,6 +217,10 @@ pub trait Plugin {
 
     fn graph_definition(&self) -> Vec<Graph>;
 
+    fn metric_key_prefix(&self) -> String {
+        "".to_string()
+    }
+
     #[doc(hidden)]
     fn print_value(&self, out: &mut io::Write, metric_name: String, value: f64, now: i64) {
         if !value.is_nan() && value.is_finite() {
@@ -228,9 +232,10 @@ pub trait Plugin {
     fn output_values(&self, out: &mut io::Write) -> Result<(), String> {
         let now = time::now().to_timespec().sec;
         let results = self.fetch_metrics()?;
+        let prefix = self.metric_key_prefix();
         for graph in self.graph_definition() {
             for metric in graph.metrics {
-                self.format_values(out, &graph.name, metric, &results, now);
+                self.format_values(out, &prefix, &graph.name, metric, &results, now);
             }
         }
         Ok(())
@@ -259,16 +264,32 @@ pub trait Plugin {
     }
 
     #[doc(hidden)]
-    fn format_values(&self, out: &mut io::Write, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
+    fn format_values(&self, out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
         for (metric_name, value) in self.collect_metric_values(graph_name, metric, results) {
-            self.print_value(out, metric_name, value, now);
+            let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
+            self.print_value(out, name, value, now);
         }
     }
 
     #[doc(hidden)]
     fn output_definitions(&self, out: &mut io::Write) -> Result<(), String> {
         writeln!(out, "# mackerel-agent-plugin").map_err(|e| format!("{}", e))?;
-        let json = json!({"graphs": self.graph_definition().iter().map(|graph| (&graph.name, graph)).collect::<HashMap<_, _>>()});
+        let prefix = self.metric_key_prefix();
+        let json = json!({
+            "graphs": self.graph_definition()
+                .iter()
+                .map(|graph|
+                    (
+                        if prefix.is_empty() {
+                            graph.name.clone()
+                        } else {
+                            prefix.clone() + "." + graph.name.as_ref()
+                        },
+                        graph
+                    )
+                )
+                .collect::<HashMap<_, _>>(),
+        });
         writeln!(out, "{}", json.to_string()).map_err(|e| format!("{}", e))?;
         Ok(())
     }
