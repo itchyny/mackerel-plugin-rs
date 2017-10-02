@@ -67,6 +67,21 @@ fn current_epoch() -> i64 {
 }
 
 #[test]
+fn plugin_print_value() {
+    let plugin = DicePlugin {};
+    for (metric_name, value, expected) in vec![
+        ("custom.foobar", 3.14, "custom.foobar\t3.14\t1500000000\n"),
+        ("custom.foobar", std::f64::NAN, ""),
+        ("custom.foobar", std::f64::INFINITY, ""),
+        ("custom.foobar", std::f64::NEG_INFINITY, ""),
+    ] {
+        let mut out = Cursor::new(Vec::new());
+        plugin.print_value(&mut out, metric_name.to_string(), value, 1500000000);
+        assert_eq!(String::from_utf8(out.into_inner()).unwrap(), expected.to_string());
+    }
+}
+
+#[test]
 fn plugin_output_values() {
     let plugin = DicePlugin {};
     let mut out = Cursor::new(Vec::new());
