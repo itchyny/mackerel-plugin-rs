@@ -166,9 +166,7 @@ pub struct Graph {
 
 impl Graph {
     pub fn new(name: String, label: String, unit: Unit, metrics: Vec<Metric>) -> Graph {
-        if name.len() == 0 || !name.chars().all(|c| valid_chars!(c) || c == '.' || c == '*' || c == '#') || name.starts_with(".")
-            || name.ends_with(".")
-        {
+        if !name.chars().all(|c| valid_chars!(c) || c == '.' || c == '*' || c == '#') || name.starts_with(".") || name.ends_with(".") {
             panic!("invalid graph name: {}", name);
         }
         Graph {
@@ -243,7 +241,7 @@ pub trait Plugin {
 
     #[doc(hidden)]
     fn collect_metric_values(&self, graph_name: &str, metric: Metric, results: &HashMap<String, f64>) -> Vec<(String, f64)> {
-        let metric_name = format!("{}.{}", graph_name, &metric.name);
+        let metric_name = if graph_name.is_empty() { metric.name } else { format!("{}.{}", graph_name, &metric.name) };
         let count = metric_name.chars().filter(|c| *c == '.').count();
         if metric_name.contains("*") || metric_name.contains("#") {
             results
@@ -282,6 +280,8 @@ pub trait Plugin {
                     (
                         if prefix.is_empty() {
                             graph.name.clone()
+                        } else if graph.name.is_empty() {
+                            prefix.clone()
                         } else {
                             prefix.clone() + "." + graph.name.as_ref()
                         },
