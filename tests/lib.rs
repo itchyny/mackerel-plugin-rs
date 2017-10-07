@@ -114,7 +114,7 @@ fn plugin_output_values() {
     let plugin = DicePlugin {};
     let mut out = Cursor::new(Vec::new());
     let now = current_epoch();
-    assert_eq!(plugin.output_values(&mut out).is_ok(), true);
+    assert_eq!(plugin.output_values(&mut out), Ok(()));
     assert_eq!(
         String::from_utf8(out.into_inner()).unwrap(),
         format!("{}\t{}\t{}\n{}\t{}\t{}\n", "dice.d6", 3.0, now, "dice.d20", 17.0, now)
@@ -188,7 +188,7 @@ fn wildcard_plugin_output_values() {
     let plugin = InodePlugin {};
     let mut out = Cursor::new(Vec::new());
     let now = current_epoch();
-    assert_eq!(plugin.output_values(&mut out).is_ok(), true);
+    assert_eq!(plugin.output_values(&mut out), Ok(()));
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(
         out_str.contains(&format!("{}\t{}\t{}\n", "inode.percentage.sda1.used", 48.2, now)),
@@ -278,7 +278,7 @@ fn prefix_plugin_output_values() {
     let plugin = PrefixPlugin {};
     let mut out = Cursor::new(Vec::new());
     let now = current_epoch();
-    assert_eq!(plugin.output_values(&mut out).is_ok(), true);
+    assert_eq!(plugin.output_values(&mut out), Ok(()));
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(
         out_str.contains(&format!("{}\t{}\t{}\n", "inode.percentage.sda1.used", 48.2, now)),
@@ -349,7 +349,7 @@ fn empty_graph_name_plugin_output_values() {
     let plugin = UptimePlugin {};
     let mut out = Cursor::new(Vec::new());
     let now = current_epoch();
-    assert_eq!(plugin.output_values(&mut out).is_ok(), true);
+    assert_eq!(plugin.output_values(&mut out), Ok(()));
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "uptime.uptime", 123456.0, now)), true);
     assert_eq!(out_str.contains("uptime.foobar"), false);
