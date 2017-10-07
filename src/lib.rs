@@ -333,8 +333,10 @@ fn atomic_write(path: &str, bytes: &[u8], now: i64) -> Result<(), String> {
 
 fn format_values(out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, metric_values: &MetricValues) {
     for (metric_name, value) in collect_metric_values(graph_name, metric, &metric_values.values) {
-        let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
-        print_value(out, name, value, metric_values.timestamp);
+        if !value.is_nan() && value.is_finite() {
+            let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
+            writeln!(out, "{}\t{}\t{}", name, value, metric_values.timestamp).unwrap();
+        }
     }
 }
 
@@ -356,12 +358,5 @@ fn collect_metric_values(graph_name: &str, metric: Metric, results: &HashMap<Str
             .collect()
     } else {
         results.get(&metric_name).map(|value| (metric_name, *value)).into_iter().collect()
-    }
-}
-
-#[inline]
-fn print_value(out: &mut io::Write, metric_name: String, value: f64, now: i64) {
-    if !value.is_nan() && value.is_finite() {
-        let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now);
     }
 }
