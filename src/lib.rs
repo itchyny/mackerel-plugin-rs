@@ -235,23 +235,21 @@ pub trait Plugin {
 
     #[doc(hidden)]
     fn output_values(&self, out: &mut io::Write) -> Result<(), String> {
-        let now = time::now().to_timespec().sec;
-        let results = self.fetch_metrics()?;
+        let metric_values = MetricValues {
+            timestamp: time::now().to_timespec().sec,
+            values: self.fetch_metrics()?,
+        };
         let prefix = self.metric_key_prefix();
         let graphs = self.graph_definition();
         let has_diff = graphs.iter().any(|graph| graph.has_diff());
         let path = self.tempfile_path(&prefix);
         for graph in graphs {
             for metric in graph.metrics {
-                format_values(out, &prefix, &graph.name, metric, &results, now);
+                format_values(out, &prefix, &graph.name, metric, &metric_values);
             }
         }
         if has_diff {
-            let metric_values = MetricValues {
-                timestamp: now,
-                values: results,
-            };
-            save_values(&path, &metric_values, now)?;
+            save_values(&path, &metric_values)?;
         }
         Ok(())
     }
@@ -313,9 +311,9 @@ pub trait Plugin {
     }
 }
 
-fn save_values(path: &str, metric_values: &MetricValues, now: i64) -> Result<(), String> {
+fn save_values(path: &str, metric_values: &MetricValues) -> Result<(), String> {
     let bytes = serde_json::to_vec(metric_values).unwrap();
-    atomic_write(path, bytes.as_slice(), now)
+    atomic_write(path, bytes.as_slice(), metric_values.timestamp)
 }
 
 fn env_value(target_key: &str) -> Option<String> {
@@ -333,10 +331,10 @@ fn atomic_write(path: &str, bytes: &[u8], now: i64) -> Result<(), String> {
     })
 }
 
-fn format_values(out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
-    for (metric_name, value) in collect_metric_values(graph_name, metric, results) {
+fn format_values(out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, metric_values: &MetricValues) {
+    for (metric_name, value) in collect_metric_values(graph_name, metric, &metric_values.values) {
         let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
-        print_value(out, name, value, now);
+        print_value(out, name, value, metric_values.timestamp);
     }
 }
 
