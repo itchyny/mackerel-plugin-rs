@@ -243,7 +243,7 @@ pub trait Plugin {
         let path = self.tempfile_path(&prefix);
         for graph in graphs {
             for metric in graph.metrics {
-                self.format_values(out, &prefix, &graph.name, metric, &results, now);
+                format_values(out, &prefix, &graph.name, metric, &results, now);
             }
         }
         if has_diff {
@@ -275,43 +275,6 @@ pub trait Plugin {
             .to_str()
             .unwrap()
             .to_owned()
-    }
-
-    #[doc(hidden)]
-    fn format_values(&self, out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
-        for (metric_name, value) in self.collect_metric_values(graph_name, metric, results) {
-            let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
-            self.print_value(out, name, value, now);
-        }
-    }
-
-    #[doc(hidden)]
-    fn collect_metric_values(&self, graph_name: &str, metric: Metric, results: &HashMap<String, f64>) -> Vec<(String, f64)> {
-        let metric_name = if graph_name.is_empty() { metric.name } else { format!("{}.{}", graph_name, &metric.name) };
-        let count = metric_name.chars().filter(|c| *c == '.').count();
-        if metric_name.contains("*") || metric_name.contains("#") {
-            results
-                .iter()
-                .filter(|&(name, _)| {
-                    name.chars().filter(|c| *c == '.').count() == count
-                        && metric_name.split('.').zip(name.split('.')).all(|(cs, ds)| if cs == "*" || cs == "#" {
-                            !ds.is_empty() && ds.chars().all(|c| valid_chars!(c))
-                        } else {
-                            cs == ds
-                        })
-                })
-                .map(|(metric_name, value)| (metric_name.clone(), *value))
-                .collect()
-        } else {
-            results.get(&metric_name).map(|value| (metric_name, *value)).into_iter().collect()
-        }
-    }
-
-    #[doc(hidden)]
-    fn print_value(&self, out: &mut io::Write, metric_name: String, value: f64, now: i64) {
-        if !value.is_nan() && value.is_finite() {
-            let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now);
-        }
     }
 
     #[doc(hidden)]
@@ -368,4 +331,39 @@ fn atomic_write(path: &str, bytes: &[u8], now: i64) -> Result<(), String> {
         let _ = fs::remove_file(tmp_path);
         format!("rename {} to {} failed: {}", tmp_path, path, e)
     })
+}
+
+fn format_values(out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, results: &HashMap<String, f64>, now: i64) {
+    for (metric_name, value) in collect_metric_values(graph_name, metric, results) {
+        let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
+        print_value(out, name, value, now);
+    }
+}
+
+fn collect_metric_values(graph_name: &str, metric: Metric, results: &HashMap<String, f64>) -> Vec<(String, f64)> {
+    let metric_name = if graph_name.is_empty() { metric.name } else { format!("{}.{}", graph_name, &metric.name) };
+    let count = metric_name.chars().filter(|c| *c == '.').count();
+    if metric_name.contains("*") || metric_name.contains("#") {
+        results
+            .iter()
+            .filter(|&(name, _)| {
+                name.chars().filter(|c| *c == '.').count() == count
+                    && metric_name.split('.').zip(name.split('.')).all(|(cs, ds)| if cs == "*" || cs == "#" {
+                        !ds.is_empty() && ds.chars().all(|c| valid_chars!(c))
+                    } else {
+                        cs == ds
+                    })
+            })
+            .map(|(metric_name, value)| (metric_name.clone(), *value))
+            .collect()
+    } else {
+        results.get(&metric_name).map(|value| (metric_name, *value)).into_iter().collect()
+    }
+}
+
+#[inline]
+fn print_value(out: &mut io::Write, metric_name: String, value: f64, now: i64) {
+    if !value.is_nan() && value.is_finite() {
+        let _ = writeln!(out, "{}\t{}\t{}", metric_name, value, now);
+    }
 }
