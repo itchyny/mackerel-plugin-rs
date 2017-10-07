@@ -221,6 +221,22 @@ struct MetricValues {
     values: HashMap<String, f64>,
 }
 
+impl MetricValues {
+    fn new(timestamp: i64, values: HashMap<String, f64>) -> MetricValues {
+        MetricValues {
+            timestamp: timestamp,
+            values: values,
+        }
+    }
+
+    fn empty() -> MetricValues {
+        MetricValues {
+            timestamp: 0,
+            values: HashMap::new(),
+        }
+    }
+}
+
 /// A trait which represents a Plugin.
 ///
 /// You can create a plugin by implementing `fetch_metrics` and `graph_definition`.
@@ -235,17 +251,15 @@ pub trait Plugin {
 
     #[doc(hidden)]
     fn output_values(&self, out: &mut io::Write) -> Result<(), String> {
-        let metric_values = MetricValues {
-            timestamp: time::now().to_timespec().sec,
-            values: self.fetch_metrics()?,
-        };
+        let metric_values = MetricValues::new(time::now().to_timespec().sec, self.fetch_metrics()?);
         let prefix = self.metric_key_prefix();
         let graphs = self.graph_definition();
         let has_diff = graphs.iter().any(|graph| graph.has_diff());
         let path = self.tempfile_path(&prefix);
+        let prev_metric_values = if has_diff { load_values(&path).unwrap_or(MetricValues::empty()) } else { MetricValues::empty() };
         for graph in graphs {
             for metric in graph.metrics {
-                format_values(out, &prefix, &graph.name, metric, &metric_values);
+                format_values(out, &prefix, &graph.name, metric, &metric_values, &prev_metric_values);
             }
         }
         if has_diff {
@@ -311,6 +325,11 @@ pub trait Plugin {
     }
 }
 
+fn load_values(path: &str) -> Result<MetricValues, String> {
+    let file = fs::File::open(path).map_err(|e| format!("open {} failed: {}", path, e))?;
+    serde_json::de::from_reader(file).map_err(|e| format!("read {} failed: {}", path, e))
+}
+
 fn save_values(path: &str, metric_values: &MetricValues) -> Result<(), String> {
     let bytes = serde_json::to_vec(metric_values).unwrap();
     atomic_write(path, bytes.as_slice(), metric_values.timestamp)
@@ -331,8 +350,15 @@ fn atomic_write(path: &str, bytes: &[u8], now: i64) -> Result<(), String> {
     })
 }
 
-fn format_values(out: &mut io::Write, prefix: &str, graph_name: &str, metric: Metric, metric_values: &MetricValues) {
-    for (metric_name, value) in collect_metric_values(graph_name, metric, &metric_values.values) {
+fn format_values(
+    out: &mut io::Write,
+    prefix: &str,
+    graph_name: &str,
+    metric: Metric,
+    metric_values: &MetricValues,
+    prev_metric_values: &MetricValues,
+) {
+    for (metric_name, value) in collect_metric_values(graph_name, metric, metric_values, prev_metric_values) {
         if !value.is_nan() && value.is_finite() {
             let name = if prefix.is_empty() { metric_name } else { prefix.to_string() + "." + metric_name.as_ref() };
             writeln!(out, "{}\t{}\t{}", name, value, metric_values.timestamp).unwrap();
@@ -340,11 +366,13 @@ fn format_values(out: &mut io::Write, prefix: &str, graph_name: &str, metric: Me
     }
 }
 
-fn collect_metric_values(graph_name: &str, metric: Metric, results: &HashMap<String, f64>) -> Vec<(String, f64)> {
+fn collect_metric_values(graph_name: &str, metric: Metric, metric_values: &MetricValues, prev_metric_values: &MetricValues) -> Vec<(String, f64)> {
+    let is_diff = metric.diff;
     let metric_name = if graph_name.is_empty() { metric.name } else { format!("{}.{}", graph_name, &metric.name) };
     let count = metric_name.chars().filter(|c| *c == '.').count();
     if metric_name.contains("*") || metric_name.contains("#") {
-        results
+        metric_values
+            .values
             .iter()
             .filter(|&(name, _)| {
                 name.chars().filter(|c| *c == '.').count() == count
@@ -354,9 +382,38 @@ fn collect_metric_values(graph_name: &str, metric: Metric, results: &HashMap<Str
                         cs == ds
                     })
             })
-            .map(|(metric_name, value)| (metric_name.clone(), *value))
+            .filter_map(|(metric_name, value)| {
+                (if is_diff {
+                    prev_metric_values.values.get(metric_name).and_then(|prev_value| {
+                        calc_diff(*value, metric_values.timestamp, *prev_value, prev_metric_values.timestamp)
+                    })
+                } else {
+                    Some(*value)
+                }).map(|value| (metric_name.clone(), value))
+            })
             .collect()
     } else {
-        results.get(&metric_name).map(|value| (metric_name, *value)).into_iter().collect()
+        metric_values
+            .values
+            .get(&metric_name)
+            .and_then(|value| if is_diff {
+                prev_metric_values.values.get(&metric_name).and_then(|prev_value| {
+                    calc_diff(*value, metric_values.timestamp, *prev_value, prev_metric_values.timestamp)
+                })
+            } else {
+                Some(*value)
+            })
+            .map(|value| (metric_name, value))
+            .into_iter()
+            .collect()
+    }
+}
+
+#[inline]
+fn calc_diff(value: f64, timestamp: i64, prev_value: f64, prev_timestamp: i64) -> Option<f64> {
+    if prev_timestamp < timestamp - 600 || timestamp <= prev_timestamp || prev_value > value {
+        None
+    } else {
+        Some((value - prev_value) / ((timestamp - prev_timestamp) as f64 / 60.0))
     }
 }
