@@ -176,6 +176,11 @@ impl Graph {
             metrics: metrics,
         }
     }
+
+    #[doc(hidden)]
+    pub fn has_diff(&self) -> bool {
+        self.metrics.iter().any(|metric| metric.diff)
+    }
 }
 
 /// Construct a Graph.
