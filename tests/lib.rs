@@ -6,6 +6,7 @@ extern crate time;
 
 use std::collections::HashMap;
 use std::io::Cursor;
+use std::fs;
 use mackerel_plugin::{Graph, Plugin};
 
 #[test]
@@ -361,4 +362,68 @@ fn empty_graph_name_plugin_output_definitions() {
             }
         })
     );
+}
+
+struct DiffMetricPlugin {}
+
+impl Plugin for DiffMetricPlugin {
+    fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
+        let mut metrics = HashMap::new();
+        metrics.insert("foobar.diff".to_string(), time::now().to_timespec().sec as f64);
+        metrics.insert("foobar.nodiff".to_string(), 100.0);
+        metrics.insert("baz.qux.diff".to_string(), 3.0 * time::now().to_timespec().sec as f64);
+        metrics.insert("baz.qux.nodiff".to_string(), 300.0);
+        Ok(metrics)
+    }
+
+    fn graph_definition(&self) -> Vec<Graph> {
+        vec![
+            graph! {
+                name: "foobar",
+                label: "Diff graph",
+                unit: "integer",
+                metrics: [
+                    { name: "diff", label: "diff", diff: true },
+                    { name: "nodiff", label: "nodiff", diff: false },
+                ]
+            },
+            graph! {
+                name: "baz.*",
+                label: "Wildcard diff graph",
+                unit: "integer",
+                metrics: [
+                    { name: "diff", label: "diff", diff: true },
+                    { name: "nodiff", label: "nodiff", diff: false },
+                ]
+            },
+        ]
+    }
+}
+
+#[test]
+fn diff_metric_plugin_output_values() {
+    let plugin = DiffMetricPlugin {};
+    let _ = fs::remove_file(plugin.tempfile_path(""));
+    let now = current_epoch();
+    {
+        let mut out = Cursor::new(Vec::new());
+        assert_eq!(plugin.output_values(&mut out), Ok(()));
+        let out_str = String::from_utf8(out.into_inner()).unwrap();
+        assert_eq!(out_str.contains("foobar.diff"), false);
+        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "foobar.nodiff", 100.0, now)), true);
+        assert_eq!(out_str.contains("baz.qux.diff"), false);
+        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.nodiff", 300.0, now)), true);
+    }
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    let now = now + 1;
+    {
+        let mut out = Cursor::new(Vec::new());
+        assert_eq!(plugin.output_values(&mut out), Ok(()));
+        let out_str = String::from_utf8(out.into_inner()).unwrap();
+        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "foobar.diff", 60.0, now)), true);
+        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "foobar.nodiff", 100.0, now)), true);
+        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.diff", 180.0, now)), true);
+        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.nodiff", 300.0, now)), true);
+    }
+    let _ = fs::remove_file(plugin.tempfile_path(""));
 }
