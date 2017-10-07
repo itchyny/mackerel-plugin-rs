@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 use std::env;
 use std::fmt;
+use std::fs;
+use std::io::Write;
 use std::io;
-use std::convert::From;
+use std::path;
 
+extern crate rand;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
@@ -229,12 +232,45 @@ pub trait Plugin {
         let now = time::now().to_timespec().sec;
         let results = self.fetch_metrics()?;
         let prefix = self.metric_key_prefix();
-        for graph in self.graph_definition() {
+        let graphs = self.graph_definition();
+        let has_diff = graphs.iter().any(|graph| graph.has_diff());
+        let path = self.tempfile_path(&prefix);
+        for graph in graphs {
             for metric in graph.metrics {
                 self.format_values(out, &prefix, &graph.name, metric, &results, now);
             }
         }
+        if has_diff {
+            self.save_values(&path, &results, now)?;
+        }
         Ok(())
+    }
+
+    #[doc(hidden)]
+    fn tempfile_path(&self, prefix: &str) -> String {
+        let name = if prefix.is_empty() {
+            let arg0 = env::args().next().unwrap();
+            let exec_name = path::Path::new(&arg0).file_name().unwrap().to_str().unwrap();
+            if exec_name.starts_with("mackerel-plugin-") {
+                exec_name.to_string()
+            } else {
+                "mackerel-plugin-".to_string() + exec_name
+            }
+        } else {
+            "mackerel-plugin-".to_string() + &prefix
+        };
+        env_value("MACKEREL_PLUGIN_WORKDIR")
+            .map_or(env::temp_dir(), |path| path::PathBuf::from(&path))
+            .join(name)
+            .to_str()
+            .unwrap()
+            .to_owned()
+    }
+
+    #[doc(hidden)]
+    fn save_values(&self, path: &str, results: &HashMap<String, f64>, now: i64) -> Result<(), String> {
+        let bytes = serde_json::to_vec(&json!({ "values": results, "timestamp": now })).unwrap();
+        atomic_write(path, bytes.as_slice(), now)
     }
 
     #[doc(hidden)]
@@ -312,4 +348,15 @@ pub trait Plugin {
 
 fn env_value(target_key: &str) -> Option<String> {
     env::vars().filter_map(|(key, value)| if key == target_key { Some(value) } else { None }).next()
+}
+
+fn atomic_write(path: &str, bytes: &[u8], now: i64) -> Result<(), String> {
+    let tmp_path = &format!("{}.{}{}", path, now, rand::random::<u64>());
+    let mut file = fs::File::create(tmp_path).map_err(|e| format!("open {} failed: {}", tmp_path, e))?;
+    file.write(bytes).map_err(|e| format!("write to {} failed: {}", tmp_path, e))?;
+    drop(file);
+    fs::rename(tmp_path, path).map_err(|e| {
+        let _ = fs::remove_file(tmp_path);
+        format!("rename {} to {} failed: {}", tmp_path, path, e)
+    })
 }
