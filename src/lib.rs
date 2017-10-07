@@ -299,24 +299,17 @@ pub trait Plugin {
         Ok(())
     }
 
-    #[doc(hidden)]
-    fn env_plugin_meta(&self) -> Option<String> {
-        env::vars()
-            .filter_map(|(key, value)| if key == "MACKEREL_AGENT_PLUGIN_META" {
-                Some(value)
-            } else {
-                None
-            })
-            .next()
-    }
-
     fn run(&self) -> Result<(), String> {
         let stdout = io::stdout();
         let mut out = io::BufWriter::new(stdout.lock());
-        if self.env_plugin_meta().map_or(false, |value| value != "") {
+        if env_value("MACKEREL_AGENT_PLUGIN_META").map_or(false, |value| value != "") {
             self.output_definitions(&mut out)
         } else {
             self.output_values(&mut out)
         }
     }
+}
+
+fn env_value(target_key: &str) -> Option<String> {
+    env::vars().filter_map(|(key, value)| if key == target_key { Some(value) } else { None }).next()
 }
