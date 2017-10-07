@@ -311,11 +311,12 @@ pub trait Plugin {
     }
 
     fn run(&self) -> Result<(), String> {
-        let mut stdout = io::stdout();
+        let stdout = io::stdout();
+        let mut out = io::BufWriter::new(stdout.lock());
         if self.env_plugin_meta().map_or(false, |value| value != "") {
-            self.output_definitions(&mut stdout)
+            self.output_definitions(&mut out)
         } else {
-            self.output_values(&mut stdout)
+            self.output_values(&mut out)
         }
     }
 }
