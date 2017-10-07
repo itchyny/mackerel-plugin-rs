@@ -215,6 +215,12 @@ macro_rules! graph {
     };
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct MetricValues {
+    timestamp: i64,
+    values: HashMap<String, f64>,
+}
+
 /// A trait which represents a Plugin.
 ///
 /// You can create a plugin by implementing `fetch_metrics` and `graph_definition`.
@@ -241,7 +247,11 @@ pub trait Plugin {
             }
         }
         if has_diff {
-            self.save_values(&path, &results, now)?;
+            let metric_values = MetricValues {
+                timestamp: now,
+                values: results,
+            };
+            save_values(&path, &metric_values, now)?;
         }
         Ok(())
     }
@@ -265,12 +275,6 @@ pub trait Plugin {
             .to_str()
             .unwrap()
             .to_owned()
-    }
-
-    #[doc(hidden)]
-    fn save_values(&self, path: &str, results: &HashMap<String, f64>, now: i64) -> Result<(), String> {
-        let bytes = serde_json::to_vec(&json!({ "values": results, "timestamp": now })).unwrap();
-        atomic_write(path, bytes.as_slice(), now)
     }
 
     #[doc(hidden)]
@@ -344,6 +348,11 @@ pub trait Plugin {
             self.output_values(&mut out)
         }
     }
+}
+
+fn save_values(path: &str, metric_values: &MetricValues, now: i64) -> Result<(), String> {
+    let bytes = serde_json::to_vec(metric_values).unwrap();
+    atomic_write(path, bytes.as_slice(), now)
 }
 
 fn env_value(target_key: &str) -> Option<String> {
