@@ -8,6 +8,7 @@ Plugins using this library.
 
 - [mackerel-plugin-loadavg](https://github.com/itchyny/mackerel-plugin-loadavg)
 - [mackerel-plugin-uptime](https://github.com/itchyny/mackerel-plugin-uptime)
+- [mackerel-plugin-ntp](https://github.com/itchyny/mackerel-plugin-ntp)
 - [mackerel-plugin-dice](https://github.com/itchyny/mackerel-plugin-dice)
 
 ## Example
