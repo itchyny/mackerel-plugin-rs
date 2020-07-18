@@ -250,7 +250,7 @@ pub trait Plugin {
     }
 
     #[doc(hidden)]
-    fn output_values(&self, out: &mut io::Write) -> Result<(), String> {
+    fn output_values(&self, out: &mut dyn io::Write) -> Result<(), String> {
         let metric_values = MetricValues::new(time::now().to_timespec().sec, self.fetch_metrics()?);
         let prefix = self.metric_key_prefix();
         let graphs = self.graph_definition();
@@ -290,7 +290,7 @@ pub trait Plugin {
     }
 
     #[doc(hidden)]
-    fn output_definitions(&self, out: &mut io::Write) -> Result<(), String> {
+    fn output_definitions(&self, out: &mut dyn io::Write) -> Result<(), String> {
         writeln!(out, "# mackerel-agent-plugin").map_err(|e| format!("{}", e))?;
         let prefix = self.metric_key_prefix();
         let json = json!({
@@ -351,7 +351,7 @@ fn atomic_write(path: &str, bytes: &[u8], now: i64) -> Result<(), String> {
 }
 
 fn format_values(
-    out: &mut io::Write,
+    out: &mut dyn io::Write,
     prefix: &str,
     graph_name: &str,
     metric: Metric,
