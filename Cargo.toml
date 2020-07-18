@@ -9,7 +9,7 @@ license = "MIT"
 keywords = ["cli", "mackerel"]
 
 [dependencies]
-serde = "1.0.80"
-serde_derive = "1.0.80"
-serde_json = "1.0.33"
-rand = "0.5"
+serde = "1.0.114"
+serde_derive = "1.0.114"
+serde_json = "1.0.56"
+rand = "0.7.3"
