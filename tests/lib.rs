@@ -2,11 +2,11 @@
 extern crate mackerel_plugin;
 #[macro_use]
 extern crate serde_json;
-extern crate time;
 
 use std::collections::HashMap;
 use std::io::Cursor;
 use std::fs;
+use std::time;
 use mackerel_plugin::{Graph, Plugin};
 
 #[test]
@@ -89,10 +89,13 @@ impl Plugin for DicePlugin {
 }
 
 fn current_epoch() -> i64 {
-    if time::now().tm_nsec > 900_000_000 {
-        std::thread::sleep(std::time::Duration::from_millis(100))
+    let now = time::SystemTime::now().duration_since(time::UNIX_EPOCH).expect("error");
+    if now.subsec_millis() < 900 {
+        now.as_secs() as i64
+    } else {
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        time::SystemTime::now().duration_since(time::UNIX_EPOCH).expect("error").as_secs() as i64
     }
-    time::now().to_timespec().sec
 }
 
 #[test]
@@ -369,9 +372,10 @@ struct DiffMetricPlugin {}
 impl Plugin for DiffMetricPlugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
         let mut metrics = HashMap::new();
-        metrics.insert("foobar.diff".to_string(), time::now().to_timespec().sec as f64);
+        let now = time::SystemTime::now().duration_since(time::UNIX_EPOCH).map_err(|e| e.to_string())?;
+        metrics.insert("foobar.diff".to_string(), now.as_secs() as f64);
         metrics.insert("foobar.nodiff".to_string(), 100.0);
-        metrics.insert("baz.qux.diff".to_string(), 3.0 * time::now().to_timespec().sec as f64);
+        metrics.insert("baz.qux.diff".to_string(), 3.0 * now.as_secs() as f64);
         metrics.insert("baz.qux.nodiff".to_string(), 300.0);
         Ok(metrics)
     }

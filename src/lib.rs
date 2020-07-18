@@ -5,13 +5,13 @@ use std::fs;
 use std::io::Write;
 use std::io;
 use std::path;
+use std::time;
 
 extern crate rand;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-extern crate time;
 
 /// Metric units
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
@@ -251,7 +251,8 @@ pub trait Plugin {
 
     #[doc(hidden)]
     fn output_values(&self, out: &mut dyn io::Write) -> Result<(), String> {
-        let metric_values = MetricValues::new(time::now().to_timespec().sec, self.fetch_metrics()?);
+        let now = time::SystemTime::now().duration_since(time::UNIX_EPOCH).map_err(|e| e.to_string())?;
+        let metric_values = MetricValues::new(now.as_secs() as i64, self.fetch_metrics()?);
         let prefix = self.metric_key_prefix();
         let graphs = self.graph_definition();
         let has_diff = graphs.iter().any(|graph| graph.has_diff());
