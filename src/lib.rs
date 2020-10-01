@@ -409,13 +409,13 @@ fn collect_metric_values(
     } else {
         format!("{}.{}", graph_name, &metric.name)
     };
-    let count = metric_name.chars().filter(|c| *c == '.').count();
+    let count = metric_name.chars().filter(|&c| c == '.').count();
     if metric_name.contains("*") || metric_name.contains("#") {
         metric_values
             .values
             .iter()
             .filter(|&(name, _)| {
-                name.chars().filter(|c| *c == '.').count() == count
+                name.chars().filter(|&c| c == '.').count() == count
                     && metric_name.split('.').zip(name.split('.')).all(|(cs, ds)| {
                         if cs == "*" || cs == "#" {
                             !ds.is_empty() && ds.chars().all(|c| valid_chars!(c))
@@ -424,21 +424,21 @@ fn collect_metric_values(
                         }
                     })
             })
-            .filter_map(|(metric_name, value)| {
+            .filter_map(|(metric_name, &value)| {
                 (if is_diff {
                     prev_metric_values
                         .values
                         .get(metric_name)
-                        .and_then(|prev_value| {
+                        .and_then(|&prev_value| {
                             calc_diff(
-                                *value,
+                                value,
                                 metric_values.timestamp,
-                                *prev_value,
+                                prev_value,
                                 prev_metric_values.timestamp,
                             )
                         })
                 } else {
-                    Some(*value)
+                    Some(value)
                 })
                 .map(|value| (metric_name.clone(), value))
             })
@@ -447,21 +447,21 @@ fn collect_metric_values(
         metric_values
             .values
             .get(&metric_name)
-            .and_then(|value| {
+            .and_then(|&value| {
                 if is_diff {
                     prev_metric_values
                         .values
                         .get(&metric_name)
-                        .and_then(|prev_value| {
+                        .and_then(|&prev_value| {
                             calc_diff(
-                                *value,
+                                value,
                                 metric_values.timestamp,
-                                *prev_value,
+                                prev_value,
                                 prev_metric_values.timestamp,
                             )
                         })
                 } else {
-                    Some(*value)
+                    Some(value)
                 }
             })
             .map(|value| (metric_name, value))
