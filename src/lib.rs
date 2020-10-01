@@ -308,7 +308,7 @@ pub trait Plugin {
         } else {
             "mackerel-plugin-".to_string() + &prefix
         };
-        env_value("MACKEREL_PLUGIN_WORKDIR")
+        env::var("MACKEREL_PLUGIN_WORKDIR")
             .map_or(env::temp_dir(), |path| path::PathBuf::from(&path))
             .join(name)
             .to_str()
@@ -344,7 +344,7 @@ pub trait Plugin {
     fn run(&self) -> Result<(), String> {
         let stdout = io::stdout();
         let mut out = io::BufWriter::new(stdout.lock());
-        if env_value("MACKEREL_AGENT_PLUGIN_META").map_or(false, |value| value != "") {
+        if env::var("MACKEREL_AGENT_PLUGIN_META").map_or(false, |value| value != "") {
             self.output_definitions(&mut out)
         } else {
             self.output_values(&mut out)
@@ -360,12 +360,6 @@ fn load_values(path: &str) -> Result<MetricValues, String> {
 fn save_values(path: &str, metric_values: &MetricValues) -> Result<(), String> {
     let bytes = serde_json::to_vec(metric_values).unwrap();
     atomic_write(path, bytes.as_slice(), metric_values.timestamp)
-}
-
-fn env_value(target_key: &str) -> Option<String> {
-    env::vars()
-        .filter_map(|(key, value)| if key == target_key { Some(value) } else { None })
-        .next()
 }
 
 fn atomic_write(path: &str, bytes: &[u8], now: i64) -> Result<(), String> {
