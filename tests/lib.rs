@@ -3,11 +3,11 @@ extern crate mackerel_plugin;
 #[macro_use]
 extern crate serde_json;
 
-use std::collections::HashMap;
-use std::io::Cursor;
-use std::fs;
-use std::time;
 use mackerel_plugin::{Graph, Plugin};
+use std::collections::HashMap;
+use std::fs;
+use std::io::Cursor;
+use std::time;
 
 #[test]
 fn serialize_graph() {
@@ -74,27 +74,30 @@ impl Plugin for DicePlugin {
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
-        vec![
-            graph! {
-                name: "dice",
-                label: "My Dice",
-                unit: "integer",
-                metrics: [
-                    { name: "d6", label: "Die 6" },
-                    { name: "d20", label: "Die 20" }
-                ]
-            },
-        ]
+        vec![graph! {
+            name: "dice",
+            label: "My Dice",
+            unit: "integer",
+            metrics: [
+                { name: "d6", label: "Die 6" },
+                { name: "d20", label: "Die 20" }
+            ]
+        }]
     }
 }
 
 fn current_epoch() -> i64 {
-    let now = time::SystemTime::now().duration_since(time::UNIX_EPOCH).expect("error");
+    let now = time::SystemTime::now()
+        .duration_since(time::UNIX_EPOCH)
+        .expect("error");
     if now.subsec_millis() < 900 {
         now.as_secs() as i64
     } else {
         std::thread::sleep(std::time::Duration::from_millis(100));
-        time::SystemTime::now().duration_since(time::UNIX_EPOCH).expect("error").as_secs() as i64
+        time::SystemTime::now()
+            .duration_since(time::UNIX_EPOCH)
+            .expect("error")
+            .as_secs() as i64
     }
 }
 
@@ -106,7 +109,10 @@ fn plugin_output_values() {
     assert_eq!(plugin.output_values(&mut out), Ok(()));
     assert_eq!(
         String::from_utf8(out.into_inner()).unwrap(),
-        format!("{}\t{}\t{}\n{}\t{}\t{}\n", "dice.d6", 3.0, now, "dice.d20", 17.0, now)
+        format!(
+            "{}\t{}\t{}\n{}\t{}\t{}\n",
+            "dice.d6", 3.0, now, "dice.d20", 17.0, now
+        )
     );
 }
 
@@ -118,7 +124,10 @@ fn plugin_output_definitions() {
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(out_str.starts_with("# mackerel-agent-plugin\n"), true);
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(out_str.chars().skip(24).collect::<String>().as_ref()).unwrap(),
+        serde_json::from_str::<serde_json::Value>(
+            out_str.chars().skip(24).collect::<String>().as_ref()
+        )
+        .unwrap(),
         json!({
             "graphs": {
                 "dice": {
@@ -180,21 +189,33 @@ fn wildcard_plugin_output_values() {
     assert_eq!(plugin.output_values(&mut out), Ok(()));
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(
-        out_str.contains(&format!("{}\t{}\t{}\n", "inode.percentage.sda1.used", 48.2, now)),
+        out_str.contains(&format!(
+            "{}\t{}\t{}\n",
+            "inode.percentage.sda1.used", 48.2, now
+        )),
         true
     );
     assert_eq!(
-        out_str.contains(&format!("{}\t{}\t{}\n", "inode.percentage.sda-2_1Z.used", 63.7, now)),
+        out_str.contains(&format!(
+            "{}\t{}\t{}\n",
+            "inode.percentage.sda-2_1Z.used", 63.7, now
+        )),
         true
     );
     assert_eq!(out_str.contains("inode.percentage.sda3.used.etc"), false);
     assert_eq!(out_str.contains("inode.percentage..used"), false);
     assert_eq!(
-        out_str.contains(&format!("{}\t{}\t{}\n", "inode.count.sda1.used", 1212333.0, now)),
+        out_str.contains(&format!(
+            "{}\t{}\t{}\n",
+            "inode.count.sda1.used", 1212333.0, now
+        )),
         true
     );
     assert_eq!(
-        out_str.contains(&format!("{}\t{}\t{}\n", "inode.count.sda1.total", 2515214.0, now)),
+        out_str.contains(&format!(
+            "{}\t{}\t{}\n",
+            "inode.count.sda1.total", 2515214.0, now
+        )),
         true
     );
     assert_eq!(out_str.contains("inode.count.sda2.used"), false);
@@ -208,7 +229,10 @@ fn wildcard_plugin_output_definitions() {
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(out_str.starts_with("# mackerel-agent-plugin\n"), true);
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(out_str.chars().skip(24).collect::<String>().as_ref()).unwrap(),
+        serde_json::from_str::<serde_json::Value>(
+            out_str.chars().skip(24).collect::<String>().as_ref()
+        )
+        .unwrap(),
         json!({
             "graphs": {
                 "inode.percentage.#": {
@@ -245,16 +269,14 @@ impl Plugin for PrefixPlugin {
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
-        vec![
-            graph! {
-                name: "percentage.#",
-                label: "Inode percentage",
-                unit: "percentage",
-                metrics: [
-                    { name: "used", label: "used %" },
-                ]
-            },
-        ]
+        vec![graph! {
+            name: "percentage.#",
+            label: "Inode percentage",
+            unit: "percentage",
+            metrics: [
+                { name: "used", label: "used %" },
+            ]
+        }]
     }
 
     fn metric_key_prefix(&self) -> String {
@@ -270,11 +292,17 @@ fn prefix_plugin_output_values() {
     assert_eq!(plugin.output_values(&mut out), Ok(()));
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(
-        out_str.contains(&format!("{}\t{}\t{}\n", "inode.percentage.sda1.used", 48.2, now)),
+        out_str.contains(&format!(
+            "{}\t{}\t{}\n",
+            "inode.percentage.sda1.used", 48.2, now
+        )),
         true
     );
     assert_eq!(
-        out_str.contains(&format!("{}\t{}\t{}\n", "inode.percentage.sda2.used", 63.7, now)),
+        out_str.contains(&format!(
+            "{}\t{}\t{}\n",
+            "inode.percentage.sda2.used", 63.7, now
+        )),
         true
     );
     assert_eq!(out_str.contains("inode.count.sda1.used"), false);
@@ -290,7 +318,10 @@ fn prefix_plugin_output_definitions() {
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(out_str.starts_with("# mackerel-agent-plugin\n"), true);
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(out_str.chars().skip(24).collect::<String>().as_ref()).unwrap(),
+        serde_json::from_str::<serde_json::Value>(
+            out_str.chars().skip(24).collect::<String>().as_ref()
+        )
+        .unwrap(),
         json!({
             "graphs": {
                 "inode.percentage.#": {
@@ -316,16 +347,14 @@ impl Plugin for UptimePlugin {
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
-        vec![
-            graph! {
-                name: "",
-                label: "Uptime",
-                unit: "integer",
-                metrics: [
-                    { name: "uptime", label: "uptime" },
-                ]
-            },
-        ]
+        vec![graph! {
+            name: "",
+            label: "Uptime",
+            unit: "integer",
+            metrics: [
+                { name: "uptime", label: "uptime" },
+            ]
+        }]
     }
 
     fn metric_key_prefix(&self) -> String {
@@ -340,7 +369,10 @@ fn empty_graph_name_plugin_output_values() {
     let now = current_epoch();
     assert_eq!(plugin.output_values(&mut out), Ok(()));
     let out_str = String::from_utf8(out.into_inner()).unwrap();
-    assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "uptime.uptime", 123456.0, now)), true);
+    assert_eq!(
+        out_str.contains(&format!("{}\t{}\t{}\n", "uptime.uptime", 123456.0, now)),
+        true
+    );
     assert_eq!(out_str.contains("uptime.foobar"), false);
 }
 
@@ -352,7 +384,10 @@ fn empty_graph_name_plugin_output_definitions() {
     let out_str = String::from_utf8(out.into_inner()).unwrap();
     assert_eq!(out_str.starts_with("# mackerel-agent-plugin\n"), true);
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(out_str.chars().skip(24).collect::<String>().as_ref()).unwrap(),
+        serde_json::from_str::<serde_json::Value>(
+            out_str.chars().skip(24).collect::<String>().as_ref()
+        )
+        .unwrap(),
         json!({
             "graphs": {
                 "uptime": {
@@ -372,7 +407,9 @@ struct DiffMetricPlugin {}
 impl Plugin for DiffMetricPlugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
         let mut metrics = HashMap::new();
-        let now = time::SystemTime::now().duration_since(time::UNIX_EPOCH).map_err(|e| e.to_string())?;
+        let now = time::SystemTime::now()
+            .duration_since(time::UNIX_EPOCH)
+            .map_err(|e| e.to_string())?;
         metrics.insert("foobar.diff".to_string(), now.as_secs() as f64);
         metrics.insert("foobar.nodiff".to_string(), 100.0);
         metrics.insert("baz.qux.diff".to_string(), 3.0 * now.as_secs() as f64);
@@ -414,9 +451,15 @@ fn diff_metric_plugin_output_values() {
         assert_eq!(plugin.output_values(&mut out), Ok(()));
         let out_str = String::from_utf8(out.into_inner()).unwrap();
         assert_eq!(out_str.contains("foobar.diff"), false);
-        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "foobar.nodiff", 100.0, now)), true);
+        assert_eq!(
+            out_str.contains(&format!("{}\t{}\t{}\n", "foobar.nodiff", 100.0, now)),
+            true
+        );
         assert_eq!(out_str.contains("baz.qux.diff"), false);
-        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.nodiff", 300.0, now)), true);
+        assert_eq!(
+            out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.nodiff", 300.0, now)),
+            true
+        );
     }
     std::thread::sleep(std::time::Duration::from_secs(1));
     let now = now + 1;
@@ -424,10 +467,22 @@ fn diff_metric_plugin_output_values() {
         let mut out = Cursor::new(Vec::new());
         assert_eq!(plugin.output_values(&mut out), Ok(()));
         let out_str = String::from_utf8(out.into_inner()).unwrap();
-        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "foobar.diff", 60.0, now)), true);
-        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "foobar.nodiff", 100.0, now)), true);
-        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.diff", 180.0, now)), true);
-        assert_eq!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.nodiff", 300.0, now)), true);
+        assert_eq!(
+            out_str.contains(&format!("{}\t{}\t{}\n", "foobar.diff", 60.0, now)),
+            true
+        );
+        assert_eq!(
+            out_str.contains(&format!("{}\t{}\t{}\n", "foobar.nodiff", 100.0, now)),
+            true
+        );
+        assert_eq!(
+            out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.diff", 180.0, now)),
+            true
+        );
+        assert_eq!(
+            out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.nodiff", 300.0, now)),
+            true
+        );
     }
     let _ = fs::remove_file(plugin.tempfile_path(""));
 }
