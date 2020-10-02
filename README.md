@@ -1,4 +1,8 @@
-# mackerel-plugin-rs [![CI Status][ci-badge]][ci-url] [![MIT License][license-badge]][license-url] [![crates.io][cratesio-badge]][cratesio-url]
+# mackerel-plugin-rs
+[![CI Status](https://github.com/itchyny/mackerel-plugin-rs/workflows/CI/badge.svg)](https://github.com/itchyny/mackerel-plugin-rs/actions)
+[![crates.io](https://img.shields.io/crates/v/mackerel_plugin.svg)](https://crates.io/crates/mackerel_plugin)
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/itchyny/mackerel-plugin-rs/blob/master/LICENSE)
+
 ー Mackerel plugin helper library for Rust ー
 
 ## Plugin samples
@@ -61,10 +65,3 @@ itchyny (https://github.com/itchyny)
 
 ## License
 This software is released under the MIT License, see LICENSE.
-
-[ci-url]: https://github.com/itchyny/mackerel-plugin-rs/actions
-[ci-badge]: https://github.com/itchyny/mackerel-plugin-rs/workflows/CI/badge.svg
-[license-url]: https://github.com/itchyny/mackerel-plugin-rs/blob/master/LICENSE
-[license-badge]: http://img.shields.io/badge/license-MIT-blue.svg
-[cratesio-url]: https://crates.io/crates/mackerel_plugin
-[cratesio-badge]: https://img.shields.io/crates/v/mackerel_plugin.svg
