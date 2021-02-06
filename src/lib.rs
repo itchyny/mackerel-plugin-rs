@@ -89,10 +89,10 @@ impl Metric {
             panic!("invalid metric name: {}", name);
         }
         Metric {
-            name: name,
-            label: label,
-            stacked: stacked,
-            diff: diff,
+            name,
+            label,
+            stacked,
+            diff,
         }
     }
 }
@@ -182,10 +182,10 @@ impl Graph {
             panic!("invalid graph name: {}", name);
         }
         Graph {
-            name: name,
-            label: label,
-            unit: unit,
-            metrics: metrics,
+            name,
+            label,
+            unit,
+            metrics,
         }
     }
 
@@ -232,10 +232,7 @@ struct MetricValues {
 
 impl MetricValues {
     fn new(timestamp: i64, values: HashMap<String, f64>) -> MetricValues {
-        MetricValues {
-            timestamp: timestamp,
-            values: values,
-        }
+        MetricValues { timestamp, values }
     }
 
     fn empty() -> MetricValues {
