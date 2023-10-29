@@ -79,8 +79,8 @@ impl Metric {
     pub fn new(name: String, label: String, stacked: bool, diff: bool) -> Metric {
         if name.is_empty()
             || !(name.chars().all(|c| valid_chars!(c)) || name == "*" || name == "#")
-            || name.starts_with(".")
-            || name.ends_with(".")
+            || name.starts_with('.')
+            || name.ends_with('.')
         {
             panic!("invalid metric name: {}", name);
         }
@@ -166,8 +166,8 @@ impl Graph {
         if !name
             .chars()
             .all(|c| valid_chars!(c) || c == '.' || c == '*' || c == '#')
-            || name.starts_with(".")
-            || name.ends_with(".")
+            || name.starts_with('.')
+            || name.ends_with('.')
         {
             panic!("invalid graph name: {}", name);
         }
@@ -290,7 +290,7 @@ pub trait Plugin {
                 "mackerel-plugin-".to_string() + exec_name
             }
         } else {
-            "mackerel-plugin-".to_string() + &prefix
+            "mackerel-plugin-".to_string() + prefix
         };
         env::var("MACKEREL_PLUGIN_WORKDIR")
             .map_or(env::temp_dir(), |path| path::PathBuf::from(&path))
@@ -321,14 +321,14 @@ pub trait Plugin {
                 )
                 .collect::<HashMap<_, _>>(),
         });
-        writeln!(out, "{}", json.to_string()).map_err(|e| format!("{}", e))?;
+        writeln!(out, "{}", json).map_err(|e| format!("{}", e))?;
         Ok(())
     }
 
     fn run(&self) -> Result<(), String> {
         let stdout = io::stdout();
         let mut out = io::BufWriter::new(stdout.lock());
-        if env::var("MACKEREL_AGENT_PLUGIN_META").map_or(false, |value| value != "") {
+        if env::var("MACKEREL_AGENT_PLUGIN_META").map_or(false, |value| !value.is_empty()) {
             self.output_definitions(&mut out)
         } else {
             self.output_values(&mut out)
@@ -394,7 +394,7 @@ fn collect_metric_values<'a>(
         format!("{}.{}", graph_name, &metric.name)
     };
     let count = metric_name.chars().filter(|&c| c == '.').count();
-    if metric_name.contains("*") || metric_name.contains("#") {
+    if metric_name.contains('*') || metric_name.contains('#') {
         Box::new(
             metric_values
                 .values
