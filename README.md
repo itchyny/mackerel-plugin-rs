@@ -15,12 +15,9 @@ Plugins using this library.
 
 ## Example
 ```rust
-#[macro_use]
-extern crate mackerel_plugin;
-extern crate rand;
-
-use std::collections::HashMap;
 use mackerel_plugin::*;
+use rand;
+use std::collections::HashMap;
 
 struct DicePlugin {}
 

@@ -1,3 +1,5 @@
+use serde_derive::{Deserialize, Serialize};
+use serde_json::json;
 use std::collections::HashMap;
 use std::env;
 use std::fmt;
@@ -6,12 +8,6 @@ use std::io;
 use std::io::Write;
 use std::path;
 use std::time;
-
-extern crate rand;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
 
 /// Metric units
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
@@ -100,31 +96,25 @@ impl Metric {
 /// Construct a Metric.
 ///
 /// ```rust
-/// # #[macro_use]
-/// # extern crate mackerel_plugin;
-/// #
-/// # fn main() {
+/// use mackerel_plugin::metric;
+///
 /// let metric = metric! {
 ///     name: "foo",
 ///     label: "Foo metric"
 /// };
-/// # }
 /// ```
 ///
 /// Additionally you can specify `stacked` and `diff` options.
 ///
 /// ```rust
-/// # #[macro_use]
-/// # extern crate mackerel_plugin;
-/// #
-/// # fn main() {
+/// use mackerel_plugin::metric;
+///
 /// let metric = metric! {
 ///     name: "foo",
 ///     label: "Foo metric",
 ///     stacked: true,
 ///     diff: true
 /// };
-/// # }
 /// ```
 #[macro_export]
 macro_rules! metric {
@@ -153,11 +143,11 @@ macro_rules! metric {
 #[doc(hidden)]
 macro_rules! metrics {
     ($({$($token:tt)+},)*) => {
-        vec![$(metric! {$($token)+},)*]
+        vec![$($crate::metric! {$($token)+},)*]
     };
 
     ($({$($token:tt)+}),*) => {
-        vec![$(metric! {$($token)+}),*]
+        vec![$($crate::metric! {$($token)+}),*]
     };
 }
 
@@ -198,10 +188,8 @@ impl Graph {
 /// Construct a Graph.
 ///
 /// ```rust
-/// # #[macro_use]
-/// # extern crate mackerel_plugin;
-/// #
-/// # fn main() {
+/// use mackerel_plugin::graph;
+///
 /// let graph = graph! {
 ///     name: "linux.swap",
 ///     label: "Linux Swap Usage",
@@ -211,12 +199,11 @@ impl Graph {
 ///         { name: "pswpout", label: "Swap Out", diff: true },
 ///     ]
 /// };
-/// # }
 /// ```
 #[macro_export]
 macro_rules! graph {
     (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: [$($metrics:tt)+]) => {
-        $crate::Graph::new($name.into(), $label.into(), $unit.into(), metrics!($($metrics)+))
+        $crate::Graph::new($name.into(), $label.into(), $unit.into(), $crate::metrics!($($metrics)+))
     };
 
     ($($token:tt)*) => {

@@ -1,13 +1,10 @@
-#[macro_use]
-extern crate mackerel_plugin;
-#[macro_use]
-extern crate serde_json;
-
-use mackerel_plugin::{Graph, Plugin};
+use serde_json::json;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Cursor;
 use std::time;
+
+use mackerel_plugin::{graph, Graph, Plugin};
 
 #[test]
 fn serialize_graph() {
