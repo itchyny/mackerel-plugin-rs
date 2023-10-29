@@ -1,7 +1,7 @@
 [package]
 name = "mackerel_plugin"
 version = "0.2.5"
-authors = ["itchyny <itchyny@hatena.ne.jp>"]
+authors = ["itchyny <itchyny@cybozu.co.jp>"]
 description = "Mackerel plugin helper library"
 repository = "https://github.com/itchyny/mackerel-plugin-rs"
 readme = "README.md"
