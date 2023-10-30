@@ -10,10 +10,10 @@ struct DicePlugin {}
 
 impl Plugin for DicePlugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
-        let mut metrics = HashMap::new();
-        metrics.insert("dice.d6".to_string(), 3.0);
-        metrics.insert("dice.d20".to_string(), 17.0);
-        Ok(metrics)
+        Ok(HashMap::from([
+            ("dice.d6".to_owned(), 3.0),
+            ("dice.d20".to_owned(), 17.0),
+        ]))
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
@@ -90,16 +90,16 @@ struct InodePlugin {}
 
 impl Plugin for InodePlugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
-        let mut metrics = HashMap::new();
-        metrics.insert("inode.count.sda1.used".to_string(), 1212333.0);
-        metrics.insert("inode.count.sda1.total".to_string(), 2515214.0);
-        metrics.insert("inode.count.sda2.used".to_string(), 1212334.0);
-        metrics.insert("inode.count.sda2.total".to_string(), 2515215.0);
-        metrics.insert("inode.percentage.sda1.used".to_string(), 48.2);
-        metrics.insert("inode.percentage.sda-2_1Z.used".to_string(), 63.7);
-        metrics.insert("inode.percentage.sda3.used.etc".to_string(), 72.1);
-        metrics.insert("inode.percentage..used".to_string(), 36.2);
-        Ok(metrics)
+        Ok(HashMap::from([
+            ("inode.count.sda1.used".to_owned(), 1212333.0),
+            ("inode.count.sda1.total".to_owned(), 2515214.0),
+            ("inode.count.sda2.used".to_owned(), 1212334.0),
+            ("inode.count.sda2.total".to_owned(), 2515215.0),
+            ("inode.percentage.sda1.used".to_owned(), 48.2),
+            ("inode.percentage.sda-2_1Z.used".to_owned(), 63.7),
+            ("inode.percentage.sda3.used.etc".to_owned(), 72.1),
+            ("inode.percentage..used".to_owned(), 36.2),
+        ]))
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
@@ -189,14 +189,14 @@ struct PrefixPlugin {}
 
 impl Plugin for PrefixPlugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
-        let mut metrics = HashMap::new();
-        metrics.insert("count.sda1.used".to_string(), 1212333.0);
-        metrics.insert("count.sda1.total".to_string(), 2515214.0);
-        metrics.insert("percentage.sda1.used".to_string(), 48.2);
-        metrics.insert("percentage.sda2.used".to_string(), 63.7);
-        metrics.insert("percentage.sda3.used.etc".to_string(), 72.1);
-        metrics.insert("percentage..used".to_string(), 36.2);
-        Ok(metrics)
+        Ok(HashMap::from([
+            ("count.sda1.used".to_owned(), 1212333.0),
+            ("count.sda1.total".to_owned(), 2515214.0),
+            ("percentage.sda1.used".to_owned(), 48.2),
+            ("percentage.sda2.used".to_owned(), 63.7),
+            ("percentage.sda3.used.etc".to_owned(), 72.1),
+            ("percentage..used".to_owned(), 36.2),
+        ]))
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
@@ -211,7 +211,7 @@ impl Plugin for PrefixPlugin {
     }
 
     fn metric_key_prefix(&self) -> String {
-        "inode".to_string()
+        "inode".to_owned()
     }
 }
 
@@ -265,10 +265,10 @@ struct UptimePlugin {}
 
 impl Plugin for UptimePlugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
-        let mut metrics = HashMap::new();
-        metrics.insert("uptime".to_string(), 123456.0);
-        metrics.insert("foobar".to_string(), 456789.0);
-        Ok(metrics)
+        Ok(HashMap::from([
+            ("uptime".to_owned(), 123456.0),
+            ("foobar".to_owned(), 456789.0),
+        ]))
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
@@ -283,7 +283,7 @@ impl Plugin for UptimePlugin {
     }
 
     fn metric_key_prefix(&self) -> String {
-        "uptime".to_string()
+        "uptime".to_owned()
     }
 }
 
@@ -328,15 +328,15 @@ struct DiffMetricPlugin {}
 
 impl Plugin for DiffMetricPlugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
-        let mut metrics = HashMap::new();
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|e| e.to_string())?;
-        metrics.insert("foobar.diff".to_string(), now.as_secs() as f64);
-        metrics.insert("foobar.nodiff".to_string(), 100.0);
-        metrics.insert("baz.qux.diff".to_string(), 3.0 * now.as_secs() as f64);
-        metrics.insert("baz.qux.nodiff".to_string(), 300.0);
-        Ok(metrics)
+        Ok(HashMap::from([
+            ("foobar.diff".to_owned(), now.as_secs() as f64),
+            ("foobar.nodiff".to_owned(), 100.0),
+            ("baz.qux.diff".to_owned(), 3.0 * now.as_secs() as f64),
+            ("baz.qux.nodiff".to_owned(), 300.0),
+        ]))
     }
 
     fn graph_definition(&self) -> Vec<Graph> {
