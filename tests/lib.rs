@@ -1,64 +1,10 @@
 use serde_json::json;
 use std::collections::HashMap;
-use std::fs;
 use std::io::Cursor;
-use std::time;
 
 use mackerel_plugin::{graph, Graph, Plugin};
 
-#[test]
-fn serialize_graph() {
-    let graph = graph! {
-        name: "foo.bar",
-        label: "Foo bar",
-        unit: "bytes/sec",
-        metrics: [
-            { name: "foo", label: "Foo metric" },
-            { name: "bar", label: "Bar metric", stacked: true },
-            { name: "baz", label: "Baz metric", diff: true },
-            { name: "qux", label: "Qux metric", stacked: true, diff: true },
-        ]
-    };
-    let json = json!({
-        "label": "Foo bar",
-        "metrics": [
-            { "name": "foo", "label": "Foo metric", "stacked": false },
-            { "name": "bar", "label": "Bar metric", "stacked": true },
-            { "name": "baz", "label": "Baz metric", "stacked": false },
-            { "name": "qux", "label": "Qux metric", "stacked": true }
-        ],
-        "unit": "bytes/sec"
-    });
-    assert_eq!(serde_json::to_value(graph).unwrap(), json);
-}
-
-#[test]
-fn graph_has_diff() {
-    let graph1 = graph! {
-        name: "sample.foobar",
-        label: "Foo bar",
-        unit: "integer",
-        metrics: [
-            { name: "foo", label: "Foo metric" },
-            { name: "bar", label: "Bar metric", stacked: true },
-            { name: "baz", label: "Baz metric", diff: true },
-            { name: "qux", label: "Qux metric", stacked: true, diff: true },
-        ]
-    };
-    assert!(graph1.has_diff());
-    let graph2 = graph! {
-        name: "sample.foobar",
-        label: "Foo bar",
-        unit: "integer",
-        metrics: [
-            { name: "foo", label: "Foo metric" },
-            { name: "bar", label: "Bar metric", stacked: true },
-            { name: "baz", label: "Baz metric", diff: false },
-            { name: "qux", label: "Qux metric", stacked: true, diff: false },
-        ]
-    };
-    assert!(!graph2.has_diff());
-}
+mod graph;
 
 struct DicePlugin {}
 
@@ -84,15 +30,15 @@ impl Plugin for DicePlugin {
 }
 
 fn current_epoch() -> i64 {
-    let now = time::SystemTime::now()
-        .duration_since(time::UNIX_EPOCH)
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
         .expect("error");
     if now.subsec_millis() < 900 {
         now.as_secs() as i64
     } else {
         std::thread::sleep(std::time::Duration::from_millis(100));
-        time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
             .expect("error")
             .as_secs() as i64
     }
@@ -383,8 +329,8 @@ struct DiffMetricPlugin {}
 impl Plugin for DiffMetricPlugin {
     fn fetch_metrics(&self) -> Result<HashMap<String, f64>, String> {
         let mut metrics = HashMap::new();
-        let now = time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
             .map_err(|e| e.to_string())?;
         metrics.insert("foobar.diff".to_string(), now.as_secs() as f64);
         metrics.insert("foobar.nodiff".to_string(), 100.0);
@@ -420,7 +366,7 @@ impl Plugin for DiffMetricPlugin {
 #[test]
 fn diff_metric_plugin_output_values() {
     let plugin = DiffMetricPlugin {};
-    let _ = fs::remove_file(plugin.tempfile_path(""));
+    let _ = std::fs::remove_file(plugin.tempfile_path(""));
     let now = current_epoch();
     {
         let mut out = Cursor::new(Vec::new());
@@ -442,5 +388,5 @@ fn diff_metric_plugin_output_values() {
         assert!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.diff", 180.0, now)));
         assert!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.nodiff", 300.0, now)));
     }
-    let _ = fs::remove_file(plugin.tempfile_path(""));
+    let _ = std::fs::remove_file(plugin.tempfile_path(""));
 }
