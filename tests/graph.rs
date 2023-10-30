@@ -38,20 +38,21 @@ fn graph_has_diff() {
             { name: "foo", label: "Foo metric" },
             { name: "bar", label: "Bar metric", stacked: true },
             { name: "baz", label: "Baz metric", diff: true },
-            { name: "qux", label: "Qux metric", stacked: true, diff: true },
+            { name: "qux", label: "Qux metric", diff: true, stacked: true }
         ]
     };
     assert!(graph1.has_diff());
+
     let graph2 = graph! {
-        name: "sample.foobar",
+        name: "SAMPLE.FOOBAR",
         label: "Foo bar",
-        unit: "integer",
+        unit: "percentage",
         metrics: [
             { name: "foo", label: "Foo metric" },
             { name: "bar", label: "Bar metric", stacked: true },
             { name: "baz", label: "Baz metric", diff: false },
-            { name: "qux", label: "Qux metric", stacked: true, diff: false },
-        ]
+            { name: "qux", label: "Qux metric", diff: false, stacked: true },
+        ],
     };
     assert!(!graph2.has_diff());
 }

@@ -3,7 +3,7 @@ use serde_derive::{Deserialize, Serialize};
 use crate::metric::Metric;
 use crate::unit::Unit;
 
-/// A Graph
+/// A graph represents a Mackerel graph schema.
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct Graph {
     #[serde(skip_serializing)]
@@ -14,30 +14,13 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn new(name: String, label: String, unit: Unit, metrics: Vec<Metric>) -> Graph {
-        if !name
-            .chars()
-            .all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' | '*' | '#'))
-            || name.starts_with('.')
-            || name.ends_with('.')
-        {
-            panic!("invalid graph name: {}", name);
-        }
-        Graph {
-            name,
-            label,
-            unit,
-            metrics,
-        }
-    }
-
     #[doc(hidden)]
     pub fn has_diff(&self) -> bool {
         self.metrics.iter().any(|metric| metric.diff)
     }
 }
 
-/// Construct a Graph.
+/// Builds a new [`Graph`].
 ///
 /// ```rust
 /// use mackerel_plugin::graph;
@@ -49,16 +32,30 @@ impl Graph {
 ///     metrics: [
 ///         { name: "pswpin", label: "Swap In", diff: true },
 ///         { name: "pswpout", label: "Swap Out", diff: true },
-///     ]
+///     ],
 /// };
 /// ```
 #[macro_export]
 macro_rules! graph {
-    (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: [$($metrics:tt)+]) => {
-        $crate::Graph::new($name.into(), $label.into(), $unit.parse().unwrap(), $crate::metrics!($($metrics)+))
-    };
+    (
+        name: $name:expr,
+        label: $label:expr,
+        unit: $unit:expr,
+        metrics: [$( {$( $metrics:tt )*} ),* $(,)?] $(,)?
+    ) => {{
+        assert!(
+            str::chars($name).all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' | '*' | '#'))
+                && !$name.starts_with('.') && !$name.ends_with('.')
+        );
+        $crate::Graph {
+            name: $name.into(),
+            label: $label.into(),
+            unit: $unit.parse().unwrap(),
+            metrics: vec![$( $crate::metric! {$( $metrics )*} ),+],
+        }
+    }};
 
-    ($($token:tt)*) => {
-        compile_error!("name, label, unit and metrics are required for a graph");
+    ($($_:tt)*) => {
+        compile_error!("name, label, unit, and metrics are required");
     };
 }
