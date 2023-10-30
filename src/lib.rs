@@ -343,11 +343,18 @@ fn load_values(path: &str) -> Result<MetricValues, String> {
 
 fn save_values(path: &str, metric_values: &MetricValues) -> Result<(), String> {
     let bytes = serde_json::to_vec(metric_values).unwrap();
-    atomic_write(path, bytes.as_slice(), metric_values.timestamp)
+    atomic_write(path, bytes.as_slice())
 }
 
-fn atomic_write(path: &str, bytes: &[u8], now: i64) -> Result<(), String> {
-    let tmp_path = &format!("{}.{}{}", path, now, rand::random::<u64>());
+fn atomic_write(path: &str, bytes: &[u8]) -> Result<(), String> {
+    let tmp_path = &format!(
+        "{}.{}",
+        path,
+        time::SystemTime::now()
+            .duration_since(time::UNIX_EPOCH)
+            .map_err(|e| e.to_string())?
+            .as_secs_f64()
+    );
     let mut file =
         fs::File::create(tmp_path).map_err(|e| format!("open {} failed: {}", tmp_path, e))?;
     file.write(bytes)
