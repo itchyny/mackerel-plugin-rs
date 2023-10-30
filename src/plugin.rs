@@ -27,7 +27,7 @@ pub trait Plugin {
     fn graph_definition(&self) -> Vec<Graph>;
 
     fn metric_key_prefix(&self) -> String {
-        "".to_string()
+        "".to_owned()
     }
 
     #[doc(hidden)]
@@ -73,12 +73,12 @@ pub trait Plugin {
                 .to_str()
                 .unwrap();
             if exec_name.starts_with("mackerel-plugin-") {
-                exec_name.to_string()
+                exec_name.to_owned()
             } else {
-                "mackerel-plugin-".to_string() + exec_name
+                "mackerel-plugin-".to_owned() + exec_name
             }
         } else {
-            "mackerel-plugin-".to_string() + prefix
+            "mackerel-plugin-".to_owned() + prefix
         };
         std::env::var("MACKEREL_PLUGIN_WORKDIR")
             .map_or(std::env::temp_dir(), |path| std::path::PathBuf::from(&path))
@@ -169,7 +169,7 @@ fn format_values(
             let name = if prefix.is_empty() {
                 metric_name
             } else {
-                prefix.to_string() + "." + metric_name.as_ref()
+                prefix.to_owned() + "." + metric_name.as_ref()
             };
             writeln!(out, "{}\t{}\t{}", name, value, metric_values.timestamp).unwrap();
         }
