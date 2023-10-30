@@ -1,7 +1,7 @@
 # mackerel-plugin-rs
 [![CI Status](https://github.com/itchyny/mackerel-plugin-rs/workflows/CI/badge.svg)](https://github.com/itchyny/mackerel-plugin-rs/actions)
 [![crates.io](https://img.shields.io/crates/v/mackerel_plugin.svg)](https://crates.io/crates/mackerel_plugin)
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/itchyny/mackerel-plugin-rs/blob/master/LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/itchyny/mackerel-plugin-rs/blob/main/LICENSE)
 
 ー Mackerel plugin helper library for Rust ー
 
