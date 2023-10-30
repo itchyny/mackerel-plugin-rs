@@ -13,3 +13,8 @@ edition = "2021"
 serde = "1.0.190"
 serde_derive = "1.0.190"
 serde_json = "1.0.107"
+serde_with = "3.4.0"
+strum = { version = "0.25.0", features = ["derive"] }
+
+[dev-dependencies]
+rstest = "0.18.2"

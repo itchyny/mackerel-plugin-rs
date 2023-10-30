@@ -55,7 +55,7 @@ impl Graph {
 #[macro_export]
 macro_rules! graph {
     (name: $name:expr, label: $label:expr, unit: $unit:expr, metrics: [$($metrics:tt)+]) => {
-        $crate::Graph::new($name.into(), $label.into(), $unit.into(), $crate::metrics!($($metrics)+))
+        $crate::Graph::new($name.into(), $label.into(), $unit.parse().unwrap(), $crate::metrics!($($metrics)+))
     };
 
     ($($token:tt)*) => {
