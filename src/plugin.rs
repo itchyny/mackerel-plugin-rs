@@ -1,3 +1,4 @@
+use auto_enums::auto_enum;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
@@ -176,79 +177,77 @@ fn format_values(
     }
 }
 
+#[auto_enum(Iterator)]
 fn collect_metric_values<'a>(
     graph_name: &'a str,
     metric: Metric,
     metric_values: &'a MetricValues,
     prev_metric_values: &'a MetricValues,
-) -> Box<dyn Iterator<Item = (String, f64)> + 'a> {
-    let is_diff = metric.diff;
+) -> impl Iterator<Item = (String, f64)> + 'a {
     let metric_name = if graph_name.is_empty() {
         metric.name
     } else {
-        format!("{}.{}", graph_name, &metric.name)
+        graph_name.to_owned() + "." + &metric.name
     };
     let count = metric_name.chars().filter(|&c| c == '.').count();
     if metric_name.contains('*') || metric_name.contains('#') {
-        Box::new(
-            metric_values
-                .values
-                .iter()
-                .filter(move |&(name, _)| {
-                    name.chars().filter(|&c| c == '.').count() == count
-                        && metric_name.split('.').zip(name.split('.')).all(|(cs, ds)| {
-                            if cs == "*" || cs == "#" {
-                                !ds.is_empty()
-                                    && ds.chars().all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'))
-                            } else {
-                                cs == ds
-                            }
+        metric_values
+            .values
+            .iter()
+            .filter(move |&(name, _)| {
+                name.chars().filter(|&c| c == '.').count() == count
+                    && metric_name.split('.').zip(name.split('.')).all(|(cs, ds)| {
+                        if cs == "*" || cs == "#" {
+                            !ds.is_empty()
+                                && ds.chars().all(
+                                    |c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'),
+                                )
+                        } else {
+                            cs == ds
+                        }
+                    })
+            })
+            .filter_map(move |(metric_name, &value)| {
+                if metric.diff {
+                    prev_metric_values
+                        .values
+                        .get(metric_name)
+                        .and_then(|&prev_value| {
+                            calc_diff(
+                                value,
+                                metric_values.timestamp,
+                                prev_value,
+                                prev_metric_values.timestamp,
+                            )
                         })
-                })
-                .filter_map(move |(metric_name, &value)| {
-                    if is_diff {
-                        prev_metric_values
-                            .values
-                            .get(metric_name)
-                            .and_then(|&prev_value| {
-                                calc_diff(
-                                    value,
-                                    metric_values.timestamp,
-                                    prev_value,
-                                    prev_metric_values.timestamp,
-                                )
-                            })
-                    } else {
-                        Some(value)
-                    }
-                    .map(|value| (metric_name.clone(), value))
-                }),
-        )
+                } else {
+                    Some(value)
+                }
+                .map(|value| (metric_name.clone(), value))
+            })
     } else {
-        Box::new(
-            metric_values
-                .values
-                .get(&metric_name)
-                .and_then(|&value| {
-                    if is_diff {
-                        prev_metric_values
-                            .values
-                            .get(&metric_name)
-                            .and_then(|&prev_value| {
-                                calc_diff(
-                                    value,
-                                    metric_values.timestamp,
-                                    prev_value,
-                                    prev_metric_values.timestamp,
-                                )
-                            })
-                    } else {
-                        Some(value)
-                    }
-                })
-                .map(|value| (metric_name, value))
-                .into_iter(),
-        )
+        metric_values
+            .values
+            .get(&metric_name)
+            .and_then(|&value| {
+                if metric.diff {
+                    prev_metric_values
+                        .values
+                        .get(&metric_name)
+                        .and_then(|&prev_value| {
+                            calc_diff(
+                                value,
+                                metric_values.timestamp,
+                                prev_value,
+                                prev_metric_values.timestamp,
+                            )
+                        })
+                } else {
+                    Some(value)
+                }
+            })
+            .map(|value| (metric_name, value))
+            .into_iter()
     }
 }
 
