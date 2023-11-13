@@ -1,5 +1,5 @@
 # mackerel-plugin-rs
-[![CI Status](https://github.com/itchyny/mackerel-plugin-rs/workflows/CI/badge.svg)](https://github.com/itchyny/mackerel-plugin-rs/actions)
+[![CI Status](https://github.com/itchyny/mackerel-plugin-rs/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/itchyny/mackerel-plugin-rs/actions?query=branch:main)
 [![crates.io](https://img.shields.io/crates/v/mackerel_plugin.svg)](https://crates.io/crates/mackerel_plugin)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/itchyny/mackerel-plugin-rs/blob/main/LICENSE)
 
