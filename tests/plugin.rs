@@ -4,8 +4,6 @@ use std::io::Cursor;
 
 use mackerel_plugin::{graph, Graph, Plugin};
 
-mod graph;
-
 struct DicePlugin {}
 
 impl Plugin for DicePlugin {
