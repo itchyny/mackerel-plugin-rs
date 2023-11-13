@@ -41,7 +41,7 @@ macro_rules! graph {
         name: $name:expr,
         label: $label:expr,
         unit: $unit:expr,
-        metrics: [$( {$( $metrics:tt )*} ),* $(,)?] $(,)?
+        metrics: [$( {$( $metrics:tt )*} ),+ $(,)?] $(,)?
     ) => {{
         assert!(
             str::chars($name).all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' | '*' | '#'))
