@@ -364,7 +364,7 @@ impl Plugin for DiffMetricPlugin {
 #[test]
 fn diff_metric_plugin_output_values() {
     let plugin = DiffMetricPlugin {};
-    let _ = std::fs::remove_file(plugin.tempfile_path(""));
+    let _ = std::fs::remove_file(plugin.tempfile_path("").unwrap());
     let now = current_epoch();
     {
         let mut out = Cursor::new(Vec::new());
@@ -386,5 +386,5 @@ fn diff_metric_plugin_output_values() {
         assert!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.diff", 180.0, now)));
         assert!(out_str.contains(&format!("{}\t{}\t{}\n", "baz.qux.nodiff", 300.0, now)));
     }
-    let _ = std::fs::remove_file(plugin.tempfile_path(""));
+    let _ = std::fs::remove_file(plugin.tempfile_path("").unwrap());
 }

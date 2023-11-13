@@ -40,7 +40,7 @@ pub trait Plugin {
         let prefix = self.metric_key_prefix();
         let graphs = self.graph_definition();
         let has_diff = graphs.iter().any(|graph| graph.has_diff());
-        let path = self.tempfile_path(&prefix);
+        let path = self.tempfile_path(&prefix)?;
         let prev_metric_values = if has_diff {
             load_values(&path).unwrap_or_default()
         } else {
@@ -65,14 +65,13 @@ pub trait Plugin {
     }
 
     #[doc(hidden)]
-    fn tempfile_path(&self, prefix: &str) -> String {
+    fn tempfile_path(&self, prefix: &str) -> Result<String, String> {
         let name = if prefix.is_empty() {
-            let arg0 = std::env::args().next().unwrap();
+            let arg0 = std::env::args().next().ok_or("unknown executable path")?;
             let exec_name = std::path::Path::new(&arg0)
                 .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap();
+                .and_then(std::ffi::OsStr::to_str)
+                .ok_or("invalid executable name")?;
             if exec_name.starts_with("mackerel-plugin-") {
                 exec_name.to_owned()
             } else {
@@ -81,12 +80,15 @@ pub trait Plugin {
         } else {
             "mackerel-plugin-".to_owned() + prefix
         };
-        std::env::var("MACKEREL_PLUGIN_WORKDIR")
-            .map_or(std::env::temp_dir(), |path| std::path::PathBuf::from(&path))
+        Ok(std::env::var("MACKEREL_PLUGIN_WORKDIR")
+            .map_or_else(
+                |_| std::env::temp_dir(),
+                |path| std::path::PathBuf::from(&path),
+            )
             .join(name)
             .to_str()
-            .unwrap()
-            .to_owned()
+            .ok_or("invalid plugin working directory")?
+            .to_owned())
     }
 
     #[doc(hidden)]
