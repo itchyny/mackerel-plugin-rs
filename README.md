@@ -16,7 +16,6 @@ Plugins using this library.
 ## Example
 ```rust
 use mackerel_plugin::*;
-use rand;
 use std::collections::HashMap;
 
 struct DicePlugin {}
@@ -45,13 +44,9 @@ impl Plugin for DicePlugin {
 }
 
 fn main() {
-    let plugin = DicePlugin {};
-    match plugin.run() {
-        Ok(_) => {},
-        Err(err) => {
-            eprintln!("mackerel-plugin-dice: {}", err);
-            std::process::exit(1);
-        }
+    if let Err(err) = (DicePlugin {}).run() {
+        eprintln!("mackerel-plugin-dice: {}", err);
+        std::process::exit(1);
     }
 }
 ```
