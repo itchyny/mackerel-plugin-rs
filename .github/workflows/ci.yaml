@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
 
 permissions:
@@ -11,13 +11,17 @@ permissions:
 
 jobs:
   test:
-    name: Test
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runs-on }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Test
-      run: cargo test
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Clippy
+        run: cargo clippy
+      - name: Test
+        run: cargo test
