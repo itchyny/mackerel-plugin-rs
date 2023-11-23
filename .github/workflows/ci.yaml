@@ -25,3 +25,16 @@ jobs:
         run: cargo clippy
       - name: Test
         run: cargo test
+
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Test README.md example
+        run: |
+          sed -n '/```rust/,/```/{//!p;}' README.md > src/main.rs
+          sed -i '/^\[dependencies\]$/arand = "0"' Cargo.toml
+          cargo run
