@@ -40,12 +40,15 @@ pub trait Plugin {
         let prefix = self.metric_key_prefix();
         let graphs = self.graph_definition();
         let has_diff = graphs.iter().any(|graph| graph.has_diff());
-        let path = self.tempfile_path(&prefix)?;
-        let prev_metric_values = if has_diff {
-            load_values(&path).unwrap_or_default()
+        let path = if has_diff {
+            Some(self.tempfile_path(&prefix)?)
         } else {
-            MetricValues::default()
+            None
         };
+        let prev_metric_values = path
+            .as_deref()
+            .and_then(|path| load_values(path).ok())
+            .unwrap_or_default();
         for graph in graphs {
             for metric in graph.metrics {
                 format_values(
@@ -55,10 +58,10 @@ pub trait Plugin {
                     metric,
                     &metric_values,
                     &prev_metric_values,
-                );
+                )?;
             }
         }
-        if has_diff {
+        if let Some(path) = path {
             save_values(&path, &metric_values)?;
         }
         Ok(())
@@ -120,10 +123,11 @@ pub trait Plugin {
         let stdout = std::io::stdout();
         let mut out = std::io::BufWriter::new(stdout.lock());
         if std::env::var("MACKEREL_AGENT_PLUGIN_META").is_ok_and(|value| !value.is_empty()) {
-            self.output_definitions(&mut out)
+            self.output_definitions(&mut out)?;
         } else {
-            self.output_values(&mut out)
+            self.output_values(&mut out)?;
         }
+        out.flush().map_err(|e| format!("{}", e))
     }
 }
 
@@ -148,7 +152,7 @@ fn atomic_write(path: &str, bytes: &[u8]) -> Result<(), String> {
     );
     let mut file =
         std::fs::File::create(tmp_path).map_err(|e| format!("open {} failed: {}", tmp_path, e))?;
-    file.write(bytes)
+    file.write_all(bytes)
         .map_err(|e| format!("write to {} failed: {}", tmp_path, e))?;
     drop(file);
     std::fs::rename(tmp_path, path).map_err(|e| {
@@ -164,19 +168,21 @@ fn format_values(
     metric: Metric,
     metric_values: &MetricValues,
     prev_metric_values: &MetricValues,
-) {
+) -> Result<(), String> {
     for (metric_name, value) in
         collect_metric_values(graph_name, metric, metric_values, prev_metric_values)
     {
-        if !value.is_nan() && value.is_finite() {
+        if value.is_finite() {
             let name = if prefix.is_empty() {
                 metric_name
             } else {
                 prefix.to_owned() + "." + metric_name.as_ref()
             };
-            writeln!(out, "{}\t{}\t{}", name, value, metric_values.timestamp).unwrap();
+            writeln!(out, "{}\t{}\t{}", name, value, metric_values.timestamp)
+                .map_err(|e| format!("{}", e))?;
         }
     }
+    Ok(())
 }
 
 #[auto_enum(Iterator)]
