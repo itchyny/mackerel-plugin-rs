@@ -119,7 +119,7 @@ pub trait Plugin {
     fn run(&self) -> Result<(), String> {
         let stdout = std::io::stdout();
         let mut out = std::io::BufWriter::new(stdout.lock());
-        if std::env::var("MACKEREL_AGENT_PLUGIN_META").map_or(false, |value| !value.is_empty()) {
+        if std::env::var("MACKEREL_AGENT_PLUGIN_META").is_ok_and(|value| !value.is_empty()) {
             self.output_definitions(&mut out)
         } else {
             self.output_values(&mut out)
