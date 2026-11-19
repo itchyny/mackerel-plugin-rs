@@ -1,11 +1,13 @@
 # mackerel-plugin-rs
-[![CI Status](https://github.com/itchyny/mackerel-plugin-rs/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/itchyny/mackerel-plugin-rs/actions?query=branch:main)
+
+[![CI Status](https://github.com/itchyny/mackerel-plugin-rs/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/itchyny/mackerel-plugin-rs/actions/workflows/ci.yaml?query=branch:main)
 [![crates.io](https://img.shields.io/crates/v/mackerel_plugin.svg)](https://crates.io/crates/mackerel_plugin)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/itchyny/mackerel-plugin-rs/blob/main/LICENSE)
 
 ー Mackerel plugin helper library for Rust ー
 
 ## Plugin samples
+
 Plugins using this library.
 
 - [mackerel-plugin-loadavg](https://github.com/itchyny/mackerel-plugin-loadavg)
@@ -14,6 +16,7 @@ Plugins using this library.
 - [mackerel-plugin-dice](https://github.com/itchyny/mackerel-plugin-dice)
 
 ## Example
+
 ```rust
 use mackerel_plugin::*;
 use std::collections::HashMap;
@@ -51,9 +54,10 @@ fn main() {
 }
 ```
 
-
 ## Author
-itchyny (https://github.com/itchyny)
+
+itchyny (<https://github.com/itchyny>)
 
 ## License
-This software is released under the MIT License, see LICENSE.
+
+This software is released under the MIT License, see [LICENSE](LICENSE).
