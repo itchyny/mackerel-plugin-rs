@@ -1,6 +1,6 @@
 [package]
 name = "mackerel_plugin"
-version = "0.2.6"
+version = "0.3.0"
 edition = "2024"
 description = "Mackerel plugin helper library"
 repository = "https://github.com/itchyny/mackerel-plugin-rs"
