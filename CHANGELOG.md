@@ -1,4 +1,13 @@
 # Changelog
+## [v0.3.0](https://github.com/itchyny/mackerel-plugin-rs/compare/v0.2.6..v0.3.0) (2026-11-20)
+* use the hash of the command line arguments in the file name of metric values, so that
+  plugins with different arguments do not share the values
+* fix error handling on writing metric values, and return errors instead of panicking
+* fix atomic write of the metric values file to write all the bytes
+* fix to construct the file path of metric values only when there are diff metrics
+* evaluate the name argument only once in `graph!` and `metric!` macros
+* update Rust edition to 2024 (requires Rust 1.88)
+
 ## [v0.2.6](https://github.com/itchyny/mackerel-plugin-rs/compare/v0.2.5..v0.2.6) (2023-11-14)
 * add `seconds`, `milliseconds`, and `bits/sec` units
 * fix atomic write of the metric values file for diff metrics, and remove dependency on
