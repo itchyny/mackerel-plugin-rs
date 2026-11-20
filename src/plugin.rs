@@ -197,6 +197,24 @@ fn collect_metric_values<'a>(
     } else {
         graph_name.to_owned() + "." + &metric.name
     };
+    let diff = metric.diff;
+    let calc_value = move |metric_name: &str, value: f64| {
+        if diff {
+            prev_metric_values
+                .values
+                .get(metric_name)
+                .and_then(|&prev_value| {
+                    calc_diff(
+                        value,
+                        metric_values.timestamp,
+                        prev_value,
+                        prev_metric_values.timestamp,
+                    )
+                })
+        } else {
+            Some(value)
+        }
+    };
     let count = metric_name.chars().filter(|&c| c == '.').count();
     if metric_name.contains('*') || metric_name.contains('#') {
         metric_values
@@ -216,44 +234,13 @@ fn collect_metric_values<'a>(
                     })
             })
             .filter_map(move |(metric_name, &value)| {
-                if metric.diff {
-                    prev_metric_values
-                        .values
-                        .get(metric_name)
-                        .and_then(|&prev_value| {
-                            calc_diff(
-                                value,
-                                metric_values.timestamp,
-                                prev_value,
-                                prev_metric_values.timestamp,
-                            )
-                        })
-                } else {
-                    Some(value)
-                }
-                .map(|value| (metric_name.clone(), value))
+                calc_value(metric_name, value).map(|value| (metric_name.clone(), value))
             })
     } else {
         metric_values
             .values
             .get(&metric_name)
-            .and_then(|&value| {
-                if metric.diff {
-                    prev_metric_values
-                        .values
-                        .get(&metric_name)
-                        .and_then(|&prev_value| {
-                            calc_diff(
-                                value,
-                                metric_values.timestamp,
-                                prev_value,
-                                prev_metric_values.timestamp,
-                            )
-                        })
-                } else {
-                    Some(value)
-                }
-            })
+            .and_then(|&value| calc_value(&metric_name, value))
             .map(|value| (metric_name, value))
             .into_iter()
     }
