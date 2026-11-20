@@ -388,3 +388,17 @@ fn diff_metric_plugin_output_values() {
     }
     let _ = std::fs::remove_file(plugin.tempfile_path("").unwrap());
 }
+
+#[test]
+fn plugin_tempfile_path() {
+    let plugin = DicePlugin {};
+    let path = plugin.tempfile_path("foo").unwrap();
+    let name = std::path::Path::new(&path)
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap();
+    let hash = name.strip_prefix("mackerel-plugin-foo-").unwrap();
+    assert_eq!(hash.len(), 40);
+    assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
+}

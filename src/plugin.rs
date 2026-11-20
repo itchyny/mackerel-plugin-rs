@@ -1,7 +1,9 @@
 use auto_enums::auto_enum;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::json;
+use sha1::{Digest, Sha1};
 use std::collections::HashMap;
+use std::fmt::Write as _;
 use std::io::Write;
 
 use crate::graph::Graph;
@@ -69,20 +71,40 @@ pub trait Plugin {
 
     #[doc(hidden)]
     fn tempfile_path(&self, prefix: &str) -> Result<String, String> {
-        let name = if prefix.is_empty() {
-            let arg0 = std::env::args().next().ok_or("unknown executable path")?;
+        let mut args = std::env::args_os();
+        let prefix = if prefix.is_empty() {
+            let arg0 = args.next().ok_or("unknown executable path")?;
             let exec_name = std::path::Path::new(&arg0)
                 .file_name()
-                .and_then(std::ffi::OsStr::to_str)
-                .ok_or("invalid executable name")?;
-            if exec_name.starts_with("mackerel-plugin-") {
-                exec_name.to_owned()
-            } else {
-                "mackerel-plugin-".to_owned() + exec_name
+                .ok_or("invalid executable name")?
+                .to_string_lossy()
+                .chars()
+                .map(|c| match c {
+                    'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' => c,
+                    _ => '_',
+                })
+                .collect::<String>();
+            match exec_name.strip_prefix("mackerel-plugin-") {
+                Some(name) => name.to_owned(),
+                None => exec_name,
             }
         } else {
-            "mackerel-plugin-".to_owned() + prefix
+            args.next();
+            prefix.to_owned()
         };
+        // different command line arguments mostly mean different metrics,
+        // so use the hash of them in the file name (same as go-mackerel-plugin)
+        let args = args
+            .map(|arg| arg.as_encoded_bytes().to_vec())
+            .collect::<Vec<_>>()
+            .join(&b' ');
+        let hash = Sha1::digest(args)
+            .iter()
+            .fold(String::with_capacity(40), |mut s, b| {
+                let _ = write!(s, "{:02x}", b);
+                s
+            });
+        let name = format!("mackerel-plugin-{}-{}", prefix, hash);
         Ok(std::env::var("MACKEREL_PLUGIN_WORKDIR")
             .map_or_else(
                 |_| std::env::temp_dir(),
