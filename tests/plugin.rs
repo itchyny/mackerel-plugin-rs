@@ -2,7 +2,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::io::Cursor;
 
-use mackerel_plugin::{graph, Graph, Plugin};
+use mackerel_plugin::{Graph, Plugin, graph};
 
 struct DicePlugin {}
 

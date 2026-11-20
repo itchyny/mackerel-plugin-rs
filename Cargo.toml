@@ -1,13 +1,14 @@
 [package]
 name = "mackerel_plugin"
 version = "0.2.6"
-authors = ["itchyny <itchyny@cybozu.co.jp>"]
+edition = "2024"
 description = "Mackerel plugin helper library"
 repository = "https://github.com/itchyny/mackerel-plugin-rs"
-readme = "README.md"
+authors = ["itchyny <itchyny@cybozu.co.jp>"]
 license = "MIT"
+readme = "README.md"
 keywords = ["cli", "mackerel"]
-edition = "2021"
+rust-version = "1.88.0"
 
 [dependencies]
 auto_enums = "0.8.10"

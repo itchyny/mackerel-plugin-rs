@@ -1,4 +1,4 @@
-use mackerel_plugin::{metric, Metric};
+use mackerel_plugin::{Metric, metric};
 
 #[test]
 fn metric_macro() {
