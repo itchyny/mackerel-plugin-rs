@@ -40,15 +40,16 @@ macro_rules! metric {
         label: $label:expr
         $( , $field:ident: $value:expr )* $(,)?
     ) => {{
+        let name: &str = $name;
         assert!(
-            !$name.is_empty()
-                && (str::chars($name).all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'))
-                    || matches!($name, "*" | "#"))
+            !name.is_empty()
+                && (name.chars().all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'))
+                    || matches!(name, "*" | "#"))
         );
         $crate::Metric {
             $( $field: $value, )*
             ..$crate::Metric {
-                name: $name.into(),
+                name: name.into(),
                 label: $label.into(),
                 stacked: false,
                 diff: false,

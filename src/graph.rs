@@ -43,12 +43,13 @@ macro_rules! graph {
         unit: $unit:expr,
         metrics: [$( {$( $metrics:tt )*} ),+ $(,)?] $(,)?
     ) => {{
+        let name: &str = $name;
         assert!(
-            str::chars($name).all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' | '*' | '#'))
-                && !$name.starts_with('.') && !$name.ends_with('.')
+            name.chars().all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' | '*' | '#'))
+                && !name.starts_with('.') && !name.ends_with('.')
         );
         $crate::Graph {
-            name: $name.into(),
+            name: name.into(),
             label: $label.into(),
             unit: $unit.parse().unwrap(),
             metrics: vec![$( $crate::metric! {$( $metrics )*} ),+],
